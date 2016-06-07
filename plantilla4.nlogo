@@ -1,18 +1,18 @@
 globals ;; Para definir las variables globales.
 [
-  
+
 ]
 
 to init-globals ;; Para darle valor inicial a las variables globales.
-  
+
 end
 
 to setup ;; Para inicializar la simulación.
-  ca           ;; Equivale a clear-ticks + clear-turtles + clear-patches + 
+  ca           ;; Equivale a clear-ticks + clear-turtles + clear-patches +
                ;; clear-drawing + clear-all-plots + clear-output.
-               
+
   init-globals ;; Para inicializar variables globales.
-  
+
   ;; Para crear tortugas e inicializar tortugas y parcelas además.
   ask patches
   [
@@ -22,7 +22,7 @@ to setup ;; Para inicializar la simulación.
   [
     T-init
   ]
-  
+
   reset-ticks  ;; Para inicializar el contador de ticks.
 end
 
@@ -49,15 +49,27 @@ end
 
 turtles-own ;; Para definir los atributos de las tortugas.
 [
-  
+  sexo;;1 equivale a hembras, 2 equivale a machos.
+  tamano
+  frecuenciaCanto
+  nivelAgresividad
+  edad
 ]
 
 to T-init ;; Para inicializar una tortuga a la vez.
-
+  set tamano random-float 0.08 + 0.96
+  let probabilidadSexo random-float 1
+  ifelse probabilidadSexo > densidadHembras
+  [
+    set sexo 2;;Equivale a macho
+    ]
+  [
+    set sexo 1;;Equivale a hembra
+    ]
 end
 
 to T-comportamientoPrincipal ;; Se debería cambiar el nombre para que represente algo signficativo en la simulación.
-  
+
 end
 
 ;;*******************************
@@ -66,11 +78,11 @@ end
 
 patches-own ;; Para definir los atributos de las parcelas.
 [
-  
+
 ]
 
 to P-init ;; Para inicializar una parcela a la vez.
-  
+
 end
 
 ;;***************************************
@@ -79,11 +91,11 @@ end
 
 links-own ;; Para definir los atributos de los links o conexiones.
 [
-  
+
 ]
 
 to L-init ;; Para inicializar un link o conexión a la vez.
-  
+
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -147,6 +159,21 @@ NIL
 NIL
 1
 
+SLIDER
+-1
+118
+171
+151
+densidadHembras
+densidadHembras
+0
+1
+0.5
+0.01
+1
+NIL
+HORIZONTAL
+
 @#$#@#$#@
 ## ¿DE QUÉ SE TRATA?
 
@@ -176,7 +203,7 @@ NIL
 
 (características interesantes o inusuales de NetLogo que usa el modelo, particularmente de código; o cómo se logra implementar características inexistentes)
 
-## MODELOS RELACIONADOS 
+## MODELOS RELACIONADOS
 
 (otros modelos de interés disponibles en la Librería de Modelos de NetLogo o en otros repositorios de modelos)
 
@@ -196,7 +223,7 @@ NIL
 ## 1  Objetivos:
 ( 1.1  )
 ## 2  Entidades, variables de estado y escalas:
-( 2.1 ) 
+( 2.1 )
 ## 3  Visión del proceso y programación:
 ( 3.1  )
 
@@ -533,7 +560,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.0.2
+NetLogo 5.3.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
@@ -541,9 +568,9 @@ NetLogo 5.0.2
 @#$#@#$#@
 default
 0.0
--0.2 0 1.0 0.0
+-0.2 0 0.0 1.0
 0.0 1 1.0 0.0
-0.2 0 1.0 0.0
+0.2 0 0.0 1.0
 link direction
 true
 0
