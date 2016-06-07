@@ -57,15 +57,14 @@ turtles-own ;; Para definir los atributos de las tortugas.
 ]
 
 to T-init ;; Para inicializar una tortuga a la vez.
-  set tamano random-float 0.08 + 0.96
+  set tamano random-float 0.16 + 0.96
   let probabilidadSexo random-float 1
   ifelse probabilidadSexo > densidadHembras
-  [
-    set sexo 2;;Equivale a macho
-    ]
-  [
-    set sexo 1;;Equivale a hembra
-    ]
+  [set sexo 2];;Equivale a macho
+  [set sexo 1];;Equivale a hembra
+  set edad 0
+
+
 end
 
 to T-comportamientoPrincipal ;; Se debería cambiar el nombre para que represente algo signficativo en la simulación.
