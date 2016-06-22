@@ -18,19 +18,24 @@ to setup ;; Para inicializar la simulación.
   [
     P-init
   ]
-  crt 1
+  crt CantidadMachos
   [
-    T-init
+    T-init-macho
+  ]
+  crt CantidadHembras
+  [
+    T-init-hembra
   ]
 
   reset-ticks  ;; Para inicializar el contador de ticks.
 end
 
 to go ;; Para ejecutar la simulación.
-  ask turtles [T-comportamientoPrincipal]
+  show ticks
+  ask turtles with [sexo = 2] [T-comportamientoPrincipal-macho]
   tick
   actualizar-salidas
-  if ticks >= 25  ;; En caso de que la simulación esté controlada por cantidad de ticks.
+  if ticks >= 2500  ;; En caso de que la simulación esté controlada por cantidad de ticks.
     [stop]
 end
 
@@ -54,21 +59,34 @@ turtles-own ;; Para definir los atributos de las tortugas.
   frecuenciaCanto
   nivelAgresividad
   edad
+  estado
 ]
 
-to T-init ;; Para inicializar una tortuga a la vez.
+to T-init-macho
+  setxy random-xcor random-ycor
   set tamano random-float 0.16 + 0.96
-  let probabilidadSexo random-float 1
-  ifelse probabilidadSexo > densidadHembras
-  [set sexo 2];;Equivale a macho
-  [set sexo 1];;Equivale a hembra
-  set edad 0
+  let p  (tamano - 0.16) / (1.12 - 0.16)
+  set frecuenciaCanto (p * (4.2 - 2.7)) + 2.7
 
+  set color red
 
+  set sexo 2
+  set edad 10
 end
 
-to T-comportamientoPrincipal ;; Se debería cambiar el nombre para que represente algo signficativo en la simulación.
+to T-init-hembra
+  setxy random-xcor random-ycor
 
+  set color yellow
+  set sexo 1
+  set edad 10
+end
+
+
+to T-comportamientoPrincipal-macho ;; Se debería cambiar el nombre para que represente algo signficativo en la simulación.
+  rt random 30
+  lt random 10
+  fd 1
 end
 
 ;;*******************************
@@ -81,7 +99,7 @@ patches-own ;; Para definir los atributos de las parcelas.
 ]
 
 to P-init ;; Para inicializar una parcela a la vez.
-
+  set pcolor scale-color green (random-float 40 + 20) 100 0
 end
 
 ;;***************************************
@@ -100,11 +118,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-649
-470
-16
-16
-13.0
+1040
+861
+-1
+-1
+20.0
 1
 10
 1
@@ -114,10 +132,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--16
-16
--16
-16
+0
+40
+0
+40
 0
 0
 1
@@ -159,19 +177,51 @@ NIL
 1
 
 SLIDER
--1
-118
-171
-151
-densidadHembras
-densidadHembras
-0
+33
+131
+205
+164
+CantidadHembras
+CantidadHembras
 1
-0.5
-0.01
+50
+4
+1
 1
 NIL
 HORIZONTAL
+
+SLIDER
+33
+170
+205
+203
+CantidadMachos
+CantidadMachos
+1
+100
+11
+1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+131
+89
+206
+122
+go once
+go
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## ¿DE QUÉ SE TRATA?
