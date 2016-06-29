@@ -60,14 +60,21 @@ turtles-own ;; Para definir los atributos de las tortugas.
   nivelAgresividad
   edad
   estado
+  territorio
 ]
 
 to T-init-macho
-  setxy random-xcor random-ycor
+
+  let pat patches with [not any? turtles-here] ;;Se selecciona una unbicación aleatoria que no tenga otra rana.
+  if count pat > 0
+  [
+   move-to one-of pat
+  ]
+
   set tamano random-float 0.16 + 0.96
   let p  (tamano - 0.16) / (1.12 - 0.16)
   set frecuenciaCanto (p * (4.2 - 2.7)) + 2.7
-
+  set territorio 1 ;;Empiezan con un territorio = 1, que es la casilla en la que se mueven
   set color red
 
   set sexo 2
@@ -76,7 +83,7 @@ end
 
 to T-init-hembra
   setxy random-xcor random-ycor
-
+  set tamano random-float 0.16 + 0.96
   set color yellow
   set sexo 1
   set edad 10
@@ -87,6 +94,33 @@ to T-comportamientoPrincipal-macho ;; Se debería cambiar el nombre para que rep
   rt random 30
   lt random 10
   fd 1
+  let ranasVecinas count other turtles with [sexo = 2] in-radius territorio ;;cantidad de ranas macho en el territorio alrededor. Parte de que el territorio es circular.
+  print ranasVecinas
+  ifelse ranasVecinas > 0;;Cuenta la cantidad de ranas macho vecinas
+  [
+    canta;;llama la accion cantar
+    let pelea? random 2;;define un número random para escoger si canta o no, tiene 50% de posibilidades de pelear. Quizás se podría usar el nivelAgresividad aquí.
+    if pelea? = 1;;Si sale 1, la rana pelea
+    [
+      pelea
+    ]
+  ]
+  [
+    set color red
+  ]
+end
+
+to canta
+  set color brown
+end
+
+to Pelea
+  set color pink
+
+end
+
+to reproduce
+
 end
 
 ;;*******************************
@@ -185,7 +219,7 @@ CantidadHembras
 CantidadHembras
 1
 50
-4
+14
 1
 1
 NIL
@@ -200,7 +234,7 @@ CantidadMachos
 CantidadMachos
 1
 100
-11
+75
 1
 1
 NIL
