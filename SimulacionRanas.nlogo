@@ -32,9 +32,14 @@ end
 
 to go ;; Para ejecutar la simulación.
   show ticks
-  ask turtles with [sexo = 2] [T-comportamientoPrincipal-macho]
+  ask turtles with [sexo = 2 and peleando? = false] [T-comportamientoPrincipal-macho]
+  ask turtles with [sexo = 2] [T-canta]
+  ask turtles with [sexo = 2 and peleando? = true] [ T-pelea]
   tick
   actualizar-salidas
+  if ticks mod 1600 = 0
+  [ ask turtles with [sexo = 2] [T-subirPeso] ]
+
   if ticks >= 2500  ;; En caso de que la simulación esté controlada por cantidad de ticks.
     [stop]
 end
@@ -56,11 +61,14 @@ turtles-own ;; Para definir los atributos de las tortugas.
 [
   sexo;;1 equivale a hembras, 2 equivale a machos.
   tamano
+  peso
   frecuenciaCanto
   nivelAgresividad
   edad
   estado
   territorio
+  peleando?
+  conQuienPeleo
 ]
 
 to T-init-macho
@@ -71,12 +79,11 @@ to T-init-macho
    move-to one-of pat
   ]
 
-  set tamano random-float 0.16 + 0.96
+  set tamano random-float 1.76 + 23.04;; Tamaño segun documento "Apuntes lluvia ideas"
+  set peso -0.795 + (0.779 * tamano) ;;Función de Condición que está en el documento "Apuntes luvia ideas"
   let p  (tamano - 0.16) / (1.12 - 0.16)
-  set frecuenciaCanto (p * (4.2 - 2.7)) + 2.7
-  set territorio 1 ;;Empiezan con un territorio = 1, que es la casilla en la que se mueven
+  set frecuenciaCanto (p * (4.2 - 2.7)) + 2.7  ;;NO ME QUEDA CLARO de donde sale esta función, es que la función de frecuencia que está en el documento me parece que es diferente.
   set color red
-
   set sexo 2
   set edad 10
 end
@@ -94,34 +101,43 @@ to T-comportamientoPrincipal-macho ;; Se debería cambiar el nombre para que rep
   rt random 30
   lt random 10
   fd 1
-  let ranasVecinas count other turtles with [sexo = 2] in-radius territorio ;;cantidad de ranas macho en el territorio alrededor. Parte de que el territorio es circular.
-  print ranasVecinas
-  ifelse ranasVecinas > 0;;Cuenta la cantidad de ranas macho vecinas
+  set color red
+end
+
+to T-canta
+  let ranasVecinas other turtles with [sexo = 2] in-radius (frecuenciaCanto / tamano) ;;cantidad de ranas macho en el radio del canto
+  show frecuenciaCanto / (tamano )
+  show ranasVecinas
+  if count ranasVecinas > 0;;Cuenta la cantidad de ranas macho vecinas
   [
-    canta;;llama la accion cantar
-    let pelea? random 2;;define un número random para escoger si canta o no, tiene 50% de posibilidades de pelear. Quizás se podría usar el nivelAgresividad aquí.
-    if pelea? = 1;;Si sale 1, la rana pelea
+    set color brown
+    ask ranasVecinas [set color brown]
+    let r random-float 1
+    if r > 0.5
     [
-      pelea
+      T-pelea
+      let ranaPelea one-of ranasVecinas
+      set conQuienPeleo ranaPelea
+     ;; directed-link-breed [memorias memoria]
+      ask ranaPelea [T-pelea]
     ]
   ]
-  [
-    set color red
-  ]
+
+
 end
 
-to canta
-  set color brown
-end
-
-to Pelea
+to T-pelea
+  set peleando? true
   set color pink
 
-end
-
-to reproduce
 
 end
+
+to T-subirPeso
+  set peso peso + 0.5
+end
+
+
 
 ;;*******************************
 ;; Definición de agentes parcela:
@@ -217,9 +233,9 @@ SLIDER
 164
 CantidadHembras
 CantidadHembras
-1
+0
 50
-14
+0
 1
 1
 NIL
@@ -234,7 +250,7 @@ CantidadMachos
 CantidadMachos
 1
 100
-75
+20
 1
 1
 NIL
