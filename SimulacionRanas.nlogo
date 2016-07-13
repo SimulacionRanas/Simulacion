@@ -1,3 +1,5 @@
+directed-link-breed [memorias memoria]
+memorias-own [id]
 globals ;; Para definir las variables globales.
 [
 
@@ -31,13 +33,16 @@ to setup ;; Para inicializar la simulación.
 end
 
 to go ;; Para ejecutar la simulación.
-  show ticks
-  ask turtles with [sexo = 2 and peleando? = false] [T-comportamientoPrincipal-macho]
-  ask turtles with [sexo = 2] [T-canta]
-  ask turtles with [sexo = 2 and peleando? = true] [ T-pelea]
+  ask turtles [
+    ifelse (peleando? = false)
+    [T-comportamientoPrincipal-macho T-canta]
+    [ T-pelea ]
+  ]
+
+ ; ask peleones with [peleando? = true] [if peleando? = true [] ]
   tick
   actualizar-salidas
-  if ticks mod 1600 = 0
+  if ticks mod 800 = 0
   [ ask turtles with [sexo = 2] [T-subirPeso] ]
 
   if ticks >= 2500  ;; En caso de que la simulación esté controlada por cantidad de ticks.
@@ -83,9 +88,11 @@ to T-init-macho
   set peso -0.795 + (0.779 * tamano) ;;Función de Condición que está en el documento "Apuntes luvia ideas"
   let p  (tamano - 0.16) / (1.12 - 0.16)
   set frecuenciaCanto (p * (4.2 - 2.7)) + 2.7  ;;NO ME QUEDA CLARO de donde sale esta función, es que la función de frecuencia que está en el documento me parece que es diferente.
-  set color red
+  set color white + peso
   set sexo 2
   set edad 10
+  set peleando? false
+  set conQuienPeleo self
 end
 
 to T-init-hembra
@@ -94,47 +101,101 @@ to T-init-hembra
   set color yellow
   set sexo 1
   set edad 10
+  set peleando? true
 end
 
 
 to T-comportamientoPrincipal-macho ;; Se debería cambiar el nombre para que represente algo signficativo en la simulación.
-  rt random 30
-  lt random 10
+
+  rt random 90
+  lt random 90
   fd 1
-  set color red
+  set peso peso - 0.01
+  set color white + peso
+  set peleando? false
+  set conQuienPeleo self
 end
 
 to T-canta
-  let ranasVecinas other turtles with [sexo = 2] in-radius (frecuenciaCanto / tamano) ;;cantidad de ranas macho en el radio del canto
-  show frecuenciaCanto / (tamano )
-  show ranasVecinas
+  let ranasVecinas other turtles with [sexo = 2 and peleando? = false] in-radius (frecuenciaCanto / tamano) ;;cantidad de ranas macho en el radio del canto
   if count ranasVecinas > 0;;Cuenta la cantidad de ranas macho vecinas
   [
-    set color brown
-    ask ranasVecinas [set color brown]
-    let r random-float 1
-    if r > 0.5
+    set conQuienPeleo one-of ranasVecinas
+    ifelse is-directed-link? conQuienPeleo = false
     [
-      T-pelea
-      let ranaPelea one-of ranasVecinas
-      set conQuienPeleo ranaPelea
-     ;; directed-link-breed [memorias memoria]
-      ask ranaPelea [T-pelea]
+      set color brown
+      ask conQuienPeleo [set color brown]
+      let r random-float 1
+      if r > 0.5
+      [
+        set peleando? true
+        set color pink
+        ask conQuienPeleo
+        [
+          set conQuienPeleo myself
+          ifelse is-directed-link? conQuienPeleo = true
+          [ set conQuienPeleo self
+            ask myself [set peleando? false]
+            set heading heading + 180 mod 360
+            fd 2
+          ]
+          [ set peleando? true
+            set color pink
+          ]
+        ]
+      ]
+    ]
+    [
+      set conQuienPeleo self
+      set heading heading + 180 mod 360
+      fd 2
     ]
   ]
+end
 
-
+to-report T-vecinoPeligroso [ranaVecina]
+  ifelse is-directed-link? ranaVecina
+  [ report true ]
+  [ report false ]
 end
 
 to T-pelea
-  set peleando? true
-  set color pink
+  let pesoOtro [peso] of conQuienPeleo
+  let r random-float peso + pesoOtro + 2
+  set peso peso  - 0.1
+  ask conQuienPeleo [set peso peso - 0.05]
+  if r < peso + pesoOtro
+  [
 
+    ifelse r < peso
+    [
+      create-link-from conQuienPeleo
+      ask conQuienPeleo [set peso peso - 0.2]
+      set heading heading + 180 mod 360
+      fd 2
+    ]
+    [
+      set peso peso - 0.1
+      create-link-to conQuienPeleo
+      set heading heading + 180 mod 360
+      fd 2
+    ]
+    set peleando? false
+    ask conQuienPeleo
+    [
+      set peleando? false
+      set conQuienPeleo self
+      set color white + peso
+
+    ]
+    set color white + peso
+    set conQuienPeleo self
+  ]
 
 end
 
 to T-subirPeso
-  set peso peso + 0.5
+  set peso peso + 1
 end
 
 
@@ -250,7 +311,7 @@ CantidadMachos
 CantidadMachos
 1
 100
-20
+7
 1
 1
 NIL
