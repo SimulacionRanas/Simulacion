@@ -2,10 +2,23 @@ directed-link-breed [memorias memoria]
 memorias-own [id]
 globals ;; Para definir las variables globales.
 [
+  ;; constantes de sexo
+  macho
+  hembra
+
+  ;; constantes de estado
+  reposo
+  movimiento
+  conflicto
 
 ]
 
 to init-globals ;; Para darle valor inicial a las variables globales.
+  set reposo 0
+  set movimiento 1
+  set conflicto 2
+  set macho 0
+  set hembra 1
 
 end
 
@@ -33,17 +46,20 @@ to setup ;; Para inicializar la simulación.
 end
 
 to go ;; Para ejecutar la simulación.
-  ask turtles [
-    ifelse (peleando? = false)
-    [T-comportamientoPrincipal-macho T-canta]
-    [ T-pelea ]
+  ;; revisa si se le debe dar alimento
+  if ticks mod 800 = 0
+  [
+    ask turtles with [sexo = macho] [T-subirPeso]
   ]
 
- ; ask peleones with [peleando? = true] [if peleando? = true [] ]
+  ;; llama al metodo principal de cada rana
+  ask turtles [
+    T-comportamientoPrincipal
+  ]
+
   tick
   actualizar-salidas
-  if ticks mod 800 = 0
-  [ ask turtles with [sexo = 2] [T-subirPeso] ]
+
 
   if ticks >= 2500  ;; En caso de que la simulación esté controlada por cantidad de ticks.
     [stop]
@@ -64,9 +80,13 @@ end
 
 turtles-own ;; Para definir los atributos de las tortugas.
 [
-  sexo;;1 equivale a hembras, 2 equivale a machos.
+  estadoActual
+  sexo
   tamano
   peso
+  pesoInicial
+
+  ;; esto aun no lo uso acá
   frecuenciaCanto
   nivelAgresividad
   edad
@@ -86,116 +106,89 @@ to T-init-macho
 
   set tamano random-float 1.76 + 23.04;; Tamaño segun documento "Apuntes lluvia ideas"
   set peso -0.795 + (0.779 * tamano) ;;Función de Condición que está en el documento "Apuntes luvia ideas"
+  set pesoInicial peso
+
+
   let p  (tamano - 0.16) / (1.12 - 0.16)
   set frecuenciaCanto (p * (4.2 - 2.7)) + 2.7  ;;NO ME QUEDA CLARO de donde sale esta función, es que la función de frecuencia que está en el documento me parece que es diferente.
-  set color white + peso
-  set sexo 2
+  ;; set color white + peso  (hacerlo scale color)
+  set color red
+  set sexo macho
   set edad 10
   set peleando? false
   set conQuienPeleo self
+  set estadoActual reposo
 end
 
 to T-init-hembra
   setxy random-xcor random-ycor
   set tamano random-float 0.16 + 0.96
   set color yellow
-  set sexo 1
+  set sexo hembra
   set edad 10
   set peleando? true
 end
 
 
-to T-comportamientoPrincipal-macho ;; Se debería cambiar el nombre para que represente algo signficativo en la simulación.
+;; acá se toman las decisiones de si cambio de estado o no
+;; por ahora lo dejé que se quede tonta en reposo
+to reevaluarEstado
+  ;; decisiones
+  ;; reposo -> movimiento
+  ;; movimiento -> reposo
+  ;; movimiento -> conflicto
+  ;; conflicto -> reposo
+  ;; conflicto -> movimiento
+   if estado = reposo
+  [
+    if peso > pesoInicial * (UmbralDesnutricion + UmbralRecuperacion)
+    [
+      set estado movimiento
+    ]
+  ]
+  if estado = movimiento
+  [
+   if peso <= pesoInicial * UmbralDesnutricion
+    [
+      set estado reposo
+    ]
+  ]
+  if estado = conflicto
+  [
+  ]
 
-  rt random 90
-  lt random 90
-  fd 1
-  set peso peso - 0.01
-  set color white + peso
-  set peleando? false
-  set conQuienPeleo self
+  set estadoActual reposo
 end
 
-to T-canta
-  let ranasVecinas other turtles with [sexo = 2 and peleando? = false] in-radius (frecuenciaCanto / tamano) ;;cantidad de ranas macho en el radio del canto
-  if count ranasVecinas > 0;;Cuenta la cantidad de ranas macho vecinas
+
+to ejecutarAccion
+  if estado = reposo
   [
-    set conQuienPeleo one-of ranasVecinas
-    ifelse is-directed-link? conQuienPeleo = false
-    [
-      set color brown
-      ask conQuienPeleo [set color brown]
-      let r random-float 1
-      if r > 0.5
-      [
-        set peleando? true
-        set color pink
-        ask conQuienPeleo
-        [
-          set conQuienPeleo myself
-          ifelse is-directed-link? conQuienPeleo = true
-          [ set conQuienPeleo self
-            ask myself [set peleando? false]
-            set heading heading + 180 mod 360
-            fd 2
-          ]
-          [ set peleando? true
-            set color pink
-          ]
-        ]
-      ]
-    ]
-    [
-      set conQuienPeleo self
-      set heading heading + 180 mod 360
-      fd 2
-    ]
+    set peso peso + CostoMovPorTic
+  ]
+  if estado = movimiento
+  [
+    rt random 90
+    lt random 90
+    fd 1
+    set peso peso - CostoMovPorTic ;; TODO hacer constante o slider
+  ]
+  if estado = conflicto
+  [
   ]
 end
 
-to-report T-vecinoPeligroso [ranaVecina]
-  ifelse is-directed-link? ranaVecina
-  [ report true ]
-  [ report false ]
-end
+to T-comportamientoPrincipal
+  ;; primero se evalua si cambio de estado no
+  reevaluarEstado
 
-to T-pelea
-  let pesoOtro [peso] of conQuienPeleo
-  let r random-float peso + pesoOtro + 2
-  set peso peso  - 0.1
-  ask conQuienPeleo [set peso peso - 0.05]
-  if r < peso + pesoOtro
-  [
-
-    ifelse r < peso
-    [
-      create-link-from conQuienPeleo
-      ask conQuienPeleo [set peso peso - 0.2]
-      set heading heading + 180 mod 360
-      fd 2
-    ]
-    [
-      set peso peso - 0.1
-      create-link-to conQuienPeleo
-      set heading heading + 180 mod 360
-      fd 2
-    ]
-    set peleando? false
-    ask conQuienPeleo
-    [
-      set peleando? false
-      set conQuienPeleo self
-      set color white + peso
-
-    ]
-    set color white + peso
-    set conQuienPeleo self
-  ]
+  ;; ejecutar la accion del estado
+  ejecutarAccion
 
 end
 
 to T-subirPeso
-  set peso peso + 1
+  set peso peso + PesoPorDia
 end
 
 
@@ -333,6 +326,66 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+33
+240
+205
+273
+PesoPorDia
+PesoPorDia
+0
+100
+10
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+33
+318
+205
+351
+UmbralDesnutricion
+UmbralDesnutricion
+0
+1
+0.3
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+33
+354
+205
+387
+UmbralRecuperacion
+UmbralRecuperacion
+0
+1
+0.1
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+27
+276
+205
+309
+CostoMovPorTic
+CostoMovPorTic
+0
+20
+2
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## ¿DE QUÉ SE TRATA?
