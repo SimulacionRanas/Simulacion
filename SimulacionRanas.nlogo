@@ -187,6 +187,85 @@ to T-comportamientoPrincipal
 
 end
 
+to T-canta
+  let ranasVecinas other turtles with [sexo = 2 and peleando? = false] in-radius (frecuenciaCanto / tamano) ;;cantidad de ranas macho en el radio del canto
+  if count ranasVecinas > 0;;Cuenta la cantidad de ranas macho vecinas
+  [
+    set conQuienPeleo one-of ranasVecinas
+    ifelse is-directed-link? conQuienPeleo = false
+    [
+      set color brown
+      ask conQuienPeleo [set color brown]
+      let r random-float 1
+      if r > 0.5
+      [
+        set peleando? true
+        set color pink
+        ask conQuienPeleo
+        [
+          set conQuienPeleo myself
+          ifelse is-directed-link? conQuienPeleo = true
+          [ set conQuienPeleo self
+            ask myself [set peleando? false]
+            set heading heading + 180 mod 360
+            fd 2
+          ]
+          [ set peleando? true
+            set color pink
+          ]
+        ]
+      ]
+    ]
+    [
+      set conQuienPeleo self
+      set heading heading + 180 mod 360
+      fd 2
+    ]
+  ]
+end
+
+to-report T-vecinoPeligroso [ranaVecina]
+  ifelse is-directed-link? ranaVecina
+  [ report true ]
+  [ report false ]
+end
+
+to T-pelea
+  let pesoOtro [peso] of conQuienPeleo
+  let r random-float peso + pesoOtro + 2
+  set peso peso  - 0.1
+  ask conQuienPeleo [set peso peso - 0.05]
+  if r < peso + pesoOtro
+  [
+
+    ifelse r < peso
+    [
+      create-link-from conQuienPeleo
+      ask conQuienPeleo [set peso peso - 0.2]
+      set heading heading + 180 mod 360
+      fd 2
+    ]
+    [
+      set peso peso - 0.1
+      create-link-to conQuienPeleo
+      set heading heading + 180 mod 360
+      fd 2
+    ]
+    set peleando? false
+    ask conQuienPeleo
+    [
+      set peleando? false
+      set conQuienPeleo self
+      set color white + peso
+
+    ]
+    set color white + peso
+    set conQuienPeleo self
+  ]
+
+end
+
+
 to T-subirPeso
   set peso peso + PesoPorDia
 end
