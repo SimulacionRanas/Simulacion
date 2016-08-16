@@ -10,6 +10,8 @@ globals ;; Para definir las variables globales.
   reposo
   movimiento
   conflicto
+  columns
+  rows
 
 ]
 
@@ -19,6 +21,8 @@ to init-globals ;; Para darle valor inicial a las variables globales.
   set conflicto 2
   set macho 0
   set hembra 1
+  set rows floor sqrt cantidadMachos
+  set columns rows
 
 end
 
@@ -45,17 +49,21 @@ to setup ;; Para inicializar la simulación.
   reset-ticks  ;; Para inicializar el contador de ticks.
 end
 
+
+
+;;*******************************
+;; go:                          *
+;;*******************************
+
 to go ;; Para ejecutar la simulación.
   ;; revisa si se le debe dar alimento
-  if ticks mod 800 = 0
+  if ticks mod 10 = 0;;Se parte de que se simulan diez horas al día, y no se simula tiempo de descanso.
   [
     ask turtles with [sexo = macho] [T-subirPeso]
   ]
 
   ;; llama al metodo principal de cada rana
-  ask turtles [
-    T-comportamientoPrincipal
-  ]
+  ask turtles [ T-comportamientoPrincipal ]
 
   tick
   actualizar-salidas
@@ -64,6 +72,7 @@ to go ;; Para ejecutar la simulación.
   if ticks >= 2500  ;; En caso de que la simulación esté controlada por cantidad de ticks.
     [stop]
 end
+
 
 
 ;;*******************************
@@ -98,20 +107,16 @@ turtles-own ;; Para definir los atributos de las tortugas.
 
 to T-init-macho
 
-  let pat patches with [not any? turtles-here] ;;Se selecciona una unbicación aleatoria que no tenga otra rana.
-  if count pat > 0
-  [
-   move-to one-of pat
-  ]
+  let row floor (who / rows) + 1
+  let column who mod columns + 1
+  set row row * ((floor 230 / rows) + 1)
+  set column column * ((floor 230 / columns) + 1)
+  setxy column row
 
   set tamano random-float 1.76 + 23.04;; Tamaño segun documento "Apuntes lluvia ideas"
   set peso -0.795 + (0.779 * tamano) ;;Función de Condición que está en el documento "Apuntes luvia ideas"
   set pesoInicial peso
-
-
-  let p  (tamano - 0.16) / (1.12 - 0.16)
-  set frecuenciaCanto (p * (4.2 - 2.7)) + 2.7  ;;NO ME QUEDA CLARO de donde sale esta función, es que la función de frecuencia que está en el documento me parece que es diferente.
-  ;; set color white + peso  (hacerlo scale color)
+  set frecuenciaCanto (-3760 * peso) + 3316 ;;Función de frecuencia en documento "Apuntes lluvia idea"
   set color red
   set sexo macho
   set edad 10
@@ -139,6 +144,10 @@ to reevaluarEstado
   ;; movimiento -> conflicto
   ;; conflicto -> reposo
   ;; conflicto -> movimiento
+  ifelse peleando? = true
+  [ set estado conflicto ]
+  [ set estado reposo ]
+
    if estado = reposo
   [
     if peso > pesoInicial * (UmbralDesnutricion + UmbralRecuperacion)
@@ -155,6 +164,7 @@ to reevaluarEstado
   ]
   if estado = conflicto
   [
+
   ]
 
   set estadoActual reposo
@@ -168,13 +178,12 @@ to ejecutarAccion
   ]
   if estado = movimiento
   [
-    rt random 90
-    lt random 90
-    fd 1
-    set peso peso - CostoMovPorTic ;; TODO hacer constante o slider
+   T-moverse
+   T-evaluarConflicto
   ]
   if estado = conflicto
   [
+
   ]
 end
 
@@ -270,6 +279,24 @@ to T-subirPeso
   set peso peso + PesoPorDia
 end
 
+to T-moverse
+  let pat one-of patches in-radius movimientoPorHora
+  move-to pat
+  set peso peso - CostoMovPorTic ;; TODO hacer constante o slider
+end
+
+to T-evaluarConflicto
+
+end
+
+to T-cantar
+
+end
+
+to T-pelear
+
+end
+
 
 
 ;;*******************************
@@ -301,11 +328,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-1040
-861
+2530
+2351
 -1
 -1
-20.0
+10.0
 1
 10
 1
@@ -316,9 +343,9 @@ GRAPHICS-WINDOW
 1
 1
 0
-40
+230
 0
-40
+230
 0
 0
 1
@@ -383,7 +410,7 @@ CantidadMachos
 CantidadMachos
 1
 100
-7
+100
 1
 1
 NIL
@@ -461,6 +488,21 @@ CostoMovPorTic
 0
 20
 2
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+26
+396
+198
+429
+movimientoPorHora
+movimientoPorHora
+0
+200
+65
 1
 1
 NIL
