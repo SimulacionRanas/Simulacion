@@ -33,6 +33,7 @@ to setup ;; Para inicializar la simulación.
   init-globals ;; Para inicializar variables globales.
 
   ;; Para crear tortugas e inicializar tortugas y parcelas además.
+
   ask patches
   [
     P-init
@@ -44,6 +45,10 @@ to setup ;; Para inicializar la simulación.
   crt CantidadHembras
   [
     T-init-hembra
+  ]
+  ask patches
+  [
+    P-update
   ]
 
   reset-ticks  ;; Para inicializar el contador de ticks.
@@ -64,6 +69,7 @@ to go ;; Para ejecutar la simulación.
 
   ;; llama al metodo principal de cada rana
   ask turtles [ T-comportamientoPrincipal ]
+  ask patches [ P-update ]
 
   tick
   actualizar-salidas
@@ -117,7 +123,20 @@ to T-init-macho
   set peso -0.795 + (0.779 * tamano) ;;Función de Condición que está en el documento "Apuntes luvia ideas"
   set pesoInicial peso
   set frecuenciaCanto (-3760 * peso) + 3316 ;;Función de frecuencia en documento "Apuntes lluvia idea"
-  set color red
+
+  set color (who * 10) + 5
+  set size 2
+  ask neighbors
+  [
+    set colorActual [color] of myself
+    set tiempoColor tiempoMaxColor
+  ]
+  ask patch-here
+  [
+    set colorActual [color] of myself
+    set tiempoColor tiempoMaxColor
+  ]
+
   set sexo macho
   set edad 10
   set peleando? false
@@ -283,6 +302,18 @@ to T-moverse
   let pat one-of patches in-radius movimientoPorHora
   move-to pat
   set peso peso - CostoMovPorTic ;; TODO hacer constante o slider
+
+  ask neighbors
+  [
+    set colorActual [color] of myself
+    set tiempoColor tiempoMaxColor
+  ]
+  ask patch-here
+  [
+    set colorActual [color] of myself
+    set tiempoColor tiempoMaxColor
+  ]
+
 end
 
 to T-evaluarConflicto
@@ -305,11 +336,32 @@ end
 
 patches-own ;; Para definir los atributos de las parcelas.
 [
+  colorActual
+  tiempoColor
 
 ]
 
 to P-init ;; Para inicializar una parcela a la vez.
-  set pcolor scale-color green (random-float 40 + 20) 100 0
+  set colorActual -1
+  set tiempoColor -1
+end
+
+to P-update
+  ifelse colorActual = -1
+  [
+    set pcolor white
+  ]
+  [
+    ifelse tiempoColor = 0
+    [
+      set colorActual -1
+      set tiempoColor -1
+    ]
+    [
+      set pcolor scale-color colorActual tiempoColor (4 * tiempoMaxColor) 0
+      set tiempoColor tiempoColor - 1
+    ]
+  ]
 end
 
 ;;***************************************
@@ -395,7 +447,7 @@ CantidadHembras
 CantidadHembras
 0
 50
-0
+5
 1
 1
 NIL
@@ -503,6 +555,21 @@ movimientoPorHora
 0
 200
 65
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+38
+484
+210
+517
+tiempoMaxColor
+tiempoMaxColor
+0
+25
+18
 1
 1
 NIL
