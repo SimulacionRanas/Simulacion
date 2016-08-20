@@ -35,6 +35,14 @@ to setup ;; Para inicializar la simulación.
   [
     P-init
   ]
+  crt CantidadMachos
+  [
+    T-init-macho
+  ]
+  crt CantidadHembras
+  [
+    T-init-hembra
+  ]
 
   let horizontal-spacing (world-width / numColumnas)
   let vertical-spacing (world-height / numFilas)
@@ -62,6 +70,16 @@ to setup ;; Para inicializar la simulación.
 end
 
 to go ;; Para ejecutar la simulación.
+  ;; revisa si se le debe dar alimento
+  if ticks mod 800 = 0
+  [
+    ask turtles with [sexo = macho] [T-subirPeso]
+  ]
+
+
+
+
+
 
   ;; llama al metodo principal de cada rana
   ask turtles [
@@ -77,6 +95,7 @@ to go ;; Para ejecutar la simulación.
   actualizar-salidas
 
 
+  if ticks >= 2500  ;; En caso de que la simulación esté controlada por cantidad de ticks.
   if ticks >= 100  ;; En caso de que la simulación esté controlada por cantidad de ticks.
     [stop]
 end
@@ -102,8 +121,10 @@ end
 turtles-own ;; Para definir los atributos de las tortugas.
 [
   estadoActual
+  sexo
   tamano
   peso
+  pesoInicial
   energia
 
   ;; esto aun no lo uso acá
@@ -116,16 +137,35 @@ turtles-own ;; Para definir los atributos de las tortugas.
   conQuienPeleo
 ]
 
+to T-init-macho
 to-report obtenerPesoAleatorio
   ;; para tener +-0.08 busco un numero entre 0 y 0.16
   ;; y le resto 0.08
   report 1.04 + (random-float 0.16 - 0.08)
 end
 
+  let pat patches with [not any? turtles-here] ;;Se selecciona una unbicación aleatoria que no tenga otra rana.
+  if count pat > 0
+  [
+   move-to one-of pat
+  ]
 
+
+
+
+
+
+  set tamano random-float 1.76 + 23.04;; Tamaño segun documento "Apuntes lluvia ideas"
+  set peso -0.795 + (0.779 * tamano) ;;Función de Condición que está en el documento "Apuntes luvia ideas"
+  set pesoInicial peso
 to T-init [x y]
   set size tamTortuga
   setxy x y
+
+
+
+
+
 
   ;;let pat patches with [not any? turtles-here] ;;Se selecciona una unbicación aleatoria que no tenga otra rana.
   ;;if count pat > 0
@@ -133,6 +173,18 @@ to T-init [x y]
    ;;move-to one-of pat
   ;;]
 
+
+
+
+
+
+
+
+  let p  (tamano - 0.16) / (1.12 - 0.16)
+  set frecuenciaCanto (p * (4.2 - 2.7)) + 2.7  ;;NO ME QUEDA CLARO de donde sale esta función, es que la función de frecuencia que está en el documento me parece que es diferente.
+  ;; set color white + peso  (hacerlo scale color)
+  set color red
+  set sexo macho
   set peso obtenerPesoAleatorio
   set energia 100
 
@@ -147,6 +199,14 @@ to T-init [x y]
   set estadoActual reposo
 end
 
+to T-init-hembra
+  setxy random-xcor random-ycor
+  set tamano random-float 0.16 + 0.96
+  set color yellow
+  set sexo hembra
+  set edad 10
+  set peleando? true
+end
 
 
 ;; acá se toman las decisiones de si cambio de estado o no
@@ -160,6 +220,7 @@ to reevaluarEstado
   ;; conflicto -> movimiento
    if estado = reposo
   [
+    if peso > pesoInicial * (UmbralDesnutricion + UmbralRecuperacion)
     if energia > umbralCansancio
     [
       set estado movimiento
@@ -167,6 +228,7 @@ to reevaluarEstado
   ]
   if estado = movimiento
   [
+   if peso <= pesoInicial * UmbralDesnutricion
    if energia < umbralCansancio
     [
       set estado reposo
@@ -183,10 +245,15 @@ end
 to ejecutarAccion
   if estado = reposo
   [
+    set peso peso + CostoMovPorTic
     set energia energia + recuperacionEnergiaPorTic
   ]
   if estado = movimiento
   [
+    rt random 90
+    lt random 90
+    fd 1
+    set peso peso - CostoMovPorTic ;; TODO hacer constante o slider
     rt random 90
     lt random 90
     fd 1
@@ -207,6 +274,7 @@ to T-comportamientoPrincipal
 end
 
 to T-canta
+  let ranasVecinas other turtles with [sexo = 2 and peleando? = false] in-radius (frecuenciaCanto / tamano) ;;cantidad de ranas macho en el radio del canto
   let ranasVecinas other turtles with [peleando? = false] in-radius (frecuenciaCanto / tamano) ;;cantidad de ranas macho en el radio del canto
   if count ranasVecinas > 0;;Cuenta la cantidad de ranas macho vecinas
   [
@@ -285,6 +353,8 @@ to T-pelea
 end
 
 
+to T-subirPeso
+  set peso peso + PesoPorDia
 to T-recargarEnergia
   set energia (energia + energiaPorDia) mod 100
 end
@@ -320,10 +390,13 @@ end
 GRAPHICS-WINDOW
 210
 10
+1040
+861
 2725
 2546
 -1
 -1
+20.0
 5.0
 1
 10
@@ -335,9 +408,12 @@ GRAPHICS-WINDOW
 1
 1
 0
+40
 500
 -500
 0
+40
+
 0
 0
 1
@@ -379,6 +455,13 @@ NIL
 1
 
 SLIDER
+33
+131
+205
+164
+CantidadHembras
+CantidadHembras
+0
 34
 134
 206
@@ -387,11 +470,42 @@ numFilas
 numFilas
 1
 50
+0
 4
 1
 1
 NIL
 HORIZONTAL
+
+SLIDER
+33
+170
+205
+203
+CantidadMachos
+CantidadMachos
+1
+100
+7
+1
+1
+NIL
+HORIZONTAL
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 BUTTON
 131
@@ -411,6 +525,15 @@ NIL
 1
 
 SLIDER
+33
+240
+205
+273
+PesoPorDia
+PesoPorDia
+0
+100
+10
 31
 469
 203
@@ -426,6 +549,13 @@ NIL
 HORIZONTAL
 
 SLIDER
+33
+318
+205
+351
+UmbralDesnutricion
+UmbralDesnutricion
+0
 34
 169
 206
@@ -433,6 +563,8 @@ SLIDER
 numColumnas
 numColumnas
 1
+0.3
+0.01
 50
 4
 1
@@ -459,6 +591,13 @@ PENS
 "default" 1.0 0 -16777216 true "" ""
 
 SLIDER
+33
+354
+205
+387
+UmbralRecuperacion
+UmbralRecuperacion
+0
 26
 259
 198
@@ -466,6 +605,7 @@ SLIDER
 umbralCansancio
 umbralCansancio
 1
+0.1
 100
 30
 0.01
@@ -475,12 +615,19 @@ HORIZONTAL
 
 SLIDER
 27
+276
+205
+309
+CostoMovPorTic
+CostoMovPorTic
 299
 199
 332
 energiaPorDia
 energiaPorDia
 0
+20
+2
 100
 30
 0.01
@@ -503,6 +650,7 @@ recuperacionEnergiaPorTic
 NIL
 HORIZONTAL
 
+
 SLIDER
 29
 398
@@ -517,6 +665,21 @@ gastoEnergiaPorTic
 1
 NIL
 HORIZONTAL
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 @#$#@#$#@
 ## ¿DE QUÉ SE TRATA?
