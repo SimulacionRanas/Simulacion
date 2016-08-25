@@ -99,11 +99,9 @@ turtles-own ;; Para definir los atributos de las tortugas.
   ;; esto aun no lo uso acá
   frecuenciaCanto
   nivelAgresividad
-  edad
-  estado
-  territorio
-  peleando?
-  conQuienPeleo
+
+  listaAmenazas
+
 ]
 
 to T-init
@@ -131,10 +129,10 @@ to T-init
     set tiempoColor tiempoMaxColor
   ]
 
-  set edad 10
-  set peleando? false
-  set conQuienPeleo self
   set estadoActual reposo
+
+  set listaAmenazas []
+
 end
 
 to T-comportamientoPrincipal
@@ -155,25 +153,22 @@ to reevaluarEstado
   ;; movimiento -> conflicto
   ;; conflicto -> reposo
   ;; conflicto -> movimiento
-  ifelse peleando? = true
-  [ set estado conflicto ]
-  [ set estado reposo ]
 
-   if estado = reposo
+   if estadoActual = reposo
   [
     if peso > pesoInicial * (UmbralDesnutricion + UmbralRecuperacion)
     [
-      set estado movimiento
+      set estadoActual movimiento
     ]
   ]
-  if estado = movimiento
+  if estadoActual = movimiento
   [
    if peso <= pesoInicial * UmbralDesnutricion
     [
-      set estado reposo
+      set estadoActual reposo
     ]
   ]
-  if estado = conflicto
+  if estadoActual = conflicto
   [
 
   ]
@@ -183,98 +178,18 @@ end
 
 
 to ejecutarAccion
-  if estado = reposo
+  if estadoActual = reposo
   [
     set peso peso + CostoMovPorTic
   ]
-  if estado = movimiento
+  if estadoActual = movimiento
   [
    T-moverse
-   T-evaluarConflicto
   ]
-  if estado = conflicto
+  if estadoActual = conflicto
   [
 
   ]
-end
-
-
-to T-canta
-  let ranasVecinas other turtles with [peleando? = false] in-radius (frecuenciaCanto / tamano) ;;cantidad de ranas macho en el radio del canto
-  if count ranasVecinas > 0;;Cuenta la cantidad de ranas macho vecinas
-  [
-    set conQuienPeleo one-of ranasVecinas
-    ifelse is-directed-link? conQuienPeleo = false
-    [
-      set color brown
-      ask conQuienPeleo [set color brown]
-      let r random-float 1
-      if r > 0.5
-      [
-        set peleando? true
-        set color pink
-        ask conQuienPeleo
-        [
-          set conQuienPeleo myself
-          ifelse is-directed-link? conQuienPeleo = true
-          [ set conQuienPeleo self
-            ask myself [set peleando? false]
-            set heading heading + 180 mod 360
-            fd 2
-          ]
-          [ set peleando? true
-            set color pink
-          ]
-        ]
-      ]
-    ]
-    [
-      set conQuienPeleo self
-      set heading heading + 180 mod 360
-      fd 2
-    ]
-  ]
-end
-
-to-report T-vecinoPeligroso [ranaVecina]
-  ifelse is-directed-link? ranaVecina
-  [ report true ]
-  [ report false ]
-end
-
-to T-pelea
-  let pesoOtro [peso] of conQuienPeleo
-  let r random-float peso + pesoOtro + 2
-  set peso peso  - 0.1
-  ask conQuienPeleo [set peso peso - 0.05]
-  if r < peso + pesoOtro
-  [
-
-    ifelse r < peso
-    [
-      create-link-from conQuienPeleo
-      ask conQuienPeleo [set peso peso - 0.2]
-      set heading heading + 180 mod 360
-      fd 2
-    ]
-    [
-      set peso peso - 0.1
-      create-link-to conQuienPeleo
-      set heading heading + 180 mod 360
-      fd 2
-    ]
-    set peleando? false
-    ask conQuienPeleo
-    [
-      set peleando? false
-      set conQuienPeleo self
-      set color white + peso
-
-    ]
-    set color white + peso
-    set conQuienPeleo self
-  ]
-
 end
 
 
@@ -283,8 +198,21 @@ to T-subirPeso
 end
 
 to T-moverse
-  let pat one-of patches in-radius movimientoPorHora
-  move-to pat
+  let movInicial true ; simular do.... while
+
+  while [movInicial and not any? turtles in-radius 3]
+  [
+    set movInicial false
+    let pOrigen patch-here
+    let pDestino one-of patches in-radius movimientoPorHora
+    move-to pDestino
+    if any? turtles in-radius 3
+    [
+      move-to pOrigen
+    ]
+  ]
+
+
   set peso peso - CostoMovPorTic ;; TODO hacer constante o slider
 
   ask neighbors
@@ -299,20 +227,6 @@ to T-moverse
   ]
 
 end
-
-to T-evaluarConflicto
-
-end
-
-to T-cantar
-
-end
-
-to T-pelear
-
-end
-
-
 
 ;;*******************************
 ;; Definición de agentes parcela:
@@ -940,7 +854,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.3.1
+NetLogo 5.2.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
