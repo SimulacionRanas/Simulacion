@@ -1,11 +1,5 @@
-directed-link-breed [memorias memoria]
-memorias-own [id]
 globals ;; Para definir las variables globales.
 [
-  ;; constantes de sexo
-  macho
-  hembra
-
   ;; constantes de estado
   reposo
   movimiento
@@ -19,8 +13,7 @@ to init-globals ;; Para darle valor inicial a las variables globales.
   set reposo 0
   set movimiento 1
   set conflicto 2
-  set macho 0
-  set hembra 1
+
   set rows floor sqrt cantidadMachos
   set columns rows
 
@@ -49,7 +42,6 @@ to setup ;; Para inicializar la simulación.
 
   reset-ticks  ;; Para inicializar el contador de ticks.
 end
-
 
 
 ;;*******************************
@@ -113,7 +105,7 @@ to T-init
 
   set tamano random-float 1.76 + 23.04;; Tamaño segun documento "Apuntes lluvia ideas"
   set peso -0.795 + (0.779 * tamano) ;;Función de Condición que está en el documento "Apuntes luvia ideas"
-  set pesoInicial peso
+
   set frecuenciaCanto (-3760 * peso) + 3316 ;;Función de frecuencia en documento "Apuntes lluvia idea"
 
   set color (who * 10) + 5
@@ -172,8 +164,6 @@ to reevaluarEstado
   [
 
   ]
-
-  set estadoActual reposo
 end
 
 
@@ -198,22 +188,23 @@ to T-subirPeso
 end
 
 to T-moverse
-  let movInicial true ; simular do.... while
-
-  while [movInicial and not any? turtles in-radius 3]
+  let enSeleccion true ; simular do.... while
+  let i 0
+  while [enSeleccion = true]
   [
-    set movInicial false
     let pOrigen patch-here
-    let pDestino one-of patches in-radius movimientoPorHora
-    move-to pDestino
-    if any? turtles in-radius 3
+    setxy random-xcor random-ycor
+    fd movimientoPorHora
+    ifelse length (list turtles in-radius radioDeteccionAmenaza) > 1
     [
       move-to pOrigen
     ]
+    [
+      set enSeleccion false
+    ]
+    set i i + 1
   ]
-
-
-  set peso peso - CostoMovPorTic ;; TODO hacer constante o slider
+    set peso peso - CostoMovPorTic ;; TODO hacer constante o slider
 
   ask neighbors
   [
@@ -437,7 +428,7 @@ movimientoPorHora
 movimientoPorHora
 0
 200
-65
+64
 1
 1
 NIL
@@ -467,6 +458,21 @@ Cantidad de tics para que la marca se borre, el color va desvaneciendo conforme 
 11
 0.0
 1
+
+SLIDER
+19
+406
+201
+439
+radioDeteccionAmenaza
+radioDeteccionAmenaza
+0
+100
+41
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## ¿DE QUÉ SE TRATA?
