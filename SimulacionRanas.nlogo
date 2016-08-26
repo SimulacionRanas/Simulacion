@@ -265,6 +265,14 @@ links-own ;; Para definir los atributos de los links o conexiones.
 to L-init ;; Para inicializar un link o conexión a la vez.
 
 end
+
+
+to abc
+  ask turtles
+  [
+    print turtles in-radius radioDeteccionAmenaza
+  ]
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
@@ -428,7 +436,7 @@ movimientoPorHora
 movimientoPorHora
 0
 200
-64
+17
 1
 1
 NIL
@@ -468,7 +476,7 @@ radioDeteccionAmenaza
 radioDeteccionAmenaza
 0
 100
-41
+23
 1
 1
 NIL
@@ -860,7 +868,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.1
+NetLogo 5.3.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
