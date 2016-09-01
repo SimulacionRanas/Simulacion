@@ -159,10 +159,18 @@ to reevaluarEstado
     [
       set estadoActual reposo
     ]
+    let listaAmenazasActuales (turtles in-radius radioDeteccionConflicto) with [NoEsAmenaza listaAmenazas who]
+
+    if any? listaAmenazasActuales and (random-float 1) < probConflicto
+    [
+      print "conflicto"
+      ;; aca deberia poner el estado a conlficto
+    ]
   ]
   if estadoActual = conflicto
   [
-
+    ;; aca deberia evaluar si ya termino conflicto y si si, determina a cual estado
+    ;; cambiar
   ]
 end
 
@@ -218,6 +226,16 @@ to T-moverse
   ]
 
 end
+
+to-report NoEsAmenaza [lista a]
+  let res false
+  foreach lista
+  [
+    set res res or ? = a
+  ]
+  report not res
+end
+
 
 ;;*******************************
 ;; Definición de agentes parcela:
@@ -443,10 +461,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-36
-512
-208
-545
+33
+587
+205
+620
 tiempoMaxColor
 tiempoMaxColor
 0
@@ -458,26 +476,56 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-58
-447
-208
-503
+55
+522
+205
+578
 Cantidad de tics para que la marca se borre, el color va desvaneciendo conforme los tics
 11
 0.0
 1
 
 SLIDER
-19
-406
-201
-439
+16
+481
+198
+514
 radioDeteccionAmenaza
 radioDeteccionAmenaza
 0
 100
 23
 1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+17
+446
+197
+479
+radioDeteccionConflicto
+radioDeteccionConflicto
+0
+100
+25
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+32
+411
+204
+444
+probConflicto
+probConflicto
+0
+1
+0.115
+0.001
 1
 NIL
 HORIZONTAL
