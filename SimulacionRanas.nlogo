@@ -63,8 +63,11 @@ to go ;; Para ejecutar la simulación.
   actualizar-salidas
 
 
-  if ticks >= 2500  ;; En caso de que la simulación esté controlada por cantidad de ticks.
-    [stop]
+  if ticks >= 250  ;; En caso de que la simulación esté controlada por cantidad de ticks.
+    [
+      stop
+      export-view "C:/Users/Emmanuel/Desktop/Simulacion/out.png"
+    ]
 end
 
 
