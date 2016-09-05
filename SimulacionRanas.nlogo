@@ -63,10 +63,10 @@ to go ;; Para ejecutar la simulación.
   actualizar-salidas
 
 
-  if ticks >= 250  ;; En caso de que la simulación esté controlada por cantidad de ticks.
+  if ticks >= read-from-string ticsMax  ;; En caso de que la simulación esté controlada por cantidad de ticks.
     [
+      export-view "vista-final.png"
       stop
-      export-view "C:/Users/Emmanuel/Desktop/Simulacion/out.png"
     ]
 end
 
@@ -532,6 +532,17 @@ probConflicto
 1
 NIL
 HORIZONTAL
+
+INPUTBOX
+12
+19
+109
+79
+ticsMax
+200
+1
+0
+String
 
 @#$#@#$#@
 ## ¿DE QUÉ SE TRATA?
