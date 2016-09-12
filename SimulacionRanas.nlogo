@@ -102,8 +102,8 @@ turtles-own ;; Para definir los atributos de las tortugas.
 to T-init
   let row floor (who / rows) + 1
   let column who mod columns + 1
-  set row row * ((floor 230 / rows) + 1)
-  set column column * ((floor 230 / columns) + 1)
+  set row row * ((floor (max-pycor - 8) / rows) + 1)
+  set column column * ((floor (max-pxcor - 8) / columns) + 1)
   setxy column row
 
   set tamano random-float 1.76 + 23.04;; Tamaño segun documento "Apuntes lluvia ideas"
@@ -309,8 +309,8 @@ GRAPHICS-WINDOW
 1
 1
 0
-1
-1
+0
+0
 1
 0
 230
@@ -365,7 +365,7 @@ CantidadMachos
 CantidadMachos
 1
 100
-36
+4
 1
 1
 NIL
@@ -539,7 +539,7 @@ INPUTBOX
 109
 79
 ticsMax
-200
+1000
 1
 0
 String
