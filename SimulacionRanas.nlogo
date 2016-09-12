@@ -31,8 +31,9 @@ to setup ;; Para inicializar la simulación.
   [
     P-init
   ]
-  crt CantidadMachos
+  cro CantidadMachos
   [
+    jump (floor max-pxcor / 2)
     T-init
   ]
   ask patches
@@ -100,11 +101,6 @@ turtles-own ;; Para definir los atributos de las tortugas.
 ]
 
 to T-init
-  let row floor (who / rows) + 1
-  let column who mod columns + 1
-  set row row * ((floor (max-pycor - 8) / rows) + 1)
-  set column column * ((floor (max-pxcor - 8) / columns) + 1)
-  setxy column row
 
   set tamano random-float 1.76 + 23.04;; Tamaño segun documento "Apuntes lluvia ideas"
   set peso -0.795 + (0.779 * tamano) ;;Función de Condición que está en el documento "Apuntes luvia ideas"
@@ -156,25 +152,37 @@ to reevaluarEstado
       set estadoActual movimiento
     ]
   ]
+  if estadoActual = conflicto
+  [
+    ;; aca deberia evaluar si ya termino conflicto y si si, determina a cual estado
+    ;; cambiar
+    set estadoActual movimiento
+  ]
   if estadoActual = movimiento
   [
    if peso <= pesoInicial * UmbralDesnutricion
     [
       set estadoActual reposo
     ]
-    let listaAmenazasActuales (turtles in-radius radioDeteccionConflicto) with [NoEsAmenaza listaAmenazas who]
+
+    let myWho who
+    let listaAmenazasActuales (turtles in-radius radioDeteccionConflicto) with [who != mywho and estadoActual != conflicto and not esAmenaza listaAmenazas who]
 
     if any? listaAmenazasActuales and (random-float 1) < probConflicto
     [
-      print "conflicto"
-      ;; aca deberia poner el estado a conlficto
+      print "conflicto iniciado por "
+      print who
+      set estadoActual conflicto
+      ask min-one-of listaAmenazasActuales [distance myself]
+      [
+        print "con el agente "
+        print who
+        set estadoActual conflicto
+      ]
+      ;; aca deberia poner el estado a conflicto
     ]
   ]
-  if estadoActual = conflicto
-  [
-    ;; aca deberia evaluar si ya termino conflicto y si si, determina a cual estado
-    ;; cambiar
-  ]
+
 end
 
 
@@ -205,8 +213,8 @@ to T-moverse
   [
     let pOrigen patch-here
     setxy random-xcor random-ycor
-    fd movimientoPorHora
-    ifelse length (list turtles in-radius radioDeteccionAmenaza) > 1
+    jump movimientoPorHora
+    ifelse not can-move? movimientoPorHora or length (list turtles in-radius radioDeteccionAmenaza) > 1
     [
       move-to pOrigen
     ]
@@ -230,13 +238,13 @@ to T-moverse
 
 end
 
-to-report NoEsAmenaza [lista a]
+to-report esAmenaza [lista a]
   let res false
   foreach lista
   [
     set res res or ? = a
   ]
-  report not res
+  report res
 end
 
 
@@ -298,10 +306,10 @@ end
 GRAPHICS-WINDOW
 210
 10
-2530
-2351
--1
--1
+4830
+4651
+230
+230
 10.0
 1
 10
@@ -312,9 +320,9 @@ GRAPHICS-WINDOW
 0
 0
 1
-0
+-230
 230
-0
+-230
 230
 0
 0
@@ -364,8 +372,8 @@ SLIDER
 CantidadMachos
 CantidadMachos
 1
-100
-4
+14
+8
 1
 1
 NIL
@@ -464,25 +472,25 @@ NIL
 HORIZONTAL
 
 SLIDER
-33
-587
-205
-620
+32
+616
+204
+649
 tiempoMaxColor
 tiempoMaxColor
 0
 100
-19
+10
 1
 1
 NIL
 HORIZONTAL
 
 TEXTBOX
-55
-522
-205
-578
+54
+551
+204
+607
 Cantidad de tics para que la marca se borre, el color va desvaneciendo conforme los tics
 11
 0.0
@@ -490,9 +498,9 @@ Cantidad de tics para que la marca se borre, el color va desvaneciendo conforme 
 
 SLIDER
 16
-481
+484
 198
-514
+517
 radioDeteccionAmenaza
 radioDeteccionAmenaza
 0
@@ -519,10 +527,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-32
-411
-204
-444
+25
+409
+197
+442
 probConflicto
 probConflicto
 0
@@ -539,7 +547,7 @@ INPUTBOX
 109
 79
 ticsMax
-1000
+300
 1
 0
 String
