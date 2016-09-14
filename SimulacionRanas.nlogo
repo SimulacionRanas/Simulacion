@@ -33,7 +33,7 @@ to setup ;; Para inicializar la simulación.
   ]
   cro CantidadMachos
   [
-    jump (floor max-pxcor / 2)
+    jump (floor max-pxcor * 1.2 / 2)
     T-init
   ]
   ask patches
@@ -212,7 +212,7 @@ to T-moverse
   while [enSeleccion = true]
   [
     let pOrigen patch-here
-    setxy random-xcor random-ycor
+    facexy random-xcor random-ycor
     jump movimientoPorHora
     ifelse not can-move? movimientoPorHora or length (list turtles in-radius radioDeteccionAmenaza) > 1
     [
@@ -306,11 +306,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-4830
-4651
+773
+594
 230
 230
-10.0
+1.2
 1
 10
 1
@@ -505,7 +505,7 @@ radioDeteccionAmenaza
 radioDeteccionAmenaza
 0
 100
-23
+24
 1
 1
 NIL
