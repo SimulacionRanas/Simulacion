@@ -91,7 +91,7 @@ turtles-own ;; Para definir los atributos de las tortugas.
   tamano
   peso
   pesoInicial
-
+  conQuienPeleo
   ;; esto aun no lo uso acá
   frecuenciaCanto
   nivelAgresividad
@@ -156,7 +156,7 @@ to reevaluarEstado
   [
     ;; aca deberia evaluar si ya termino conflicto y si si, determina a cual estado
     ;; cambiar
-    set estadoActual movimiento
+    ;set estadoActual movimiento
   ]
   if estadoActual = movimiento
   [
@@ -173,11 +173,13 @@ to reevaluarEstado
       print "conflicto iniciado por "
       print who
       set estadoActual conflicto
-      ask min-one-of listaAmenazasActuales [distance myself]
+      set conQuienPeleo  min-one-of listaAmenazasActuales [distance myself]
+      ask conQuienPeleo
       [
         print "con el agente "
         print who
         set estadoActual conflicto
+        set conQuienPeleo myself
       ]
       ;; aca deberia poner el estado a conflicto
     ]
@@ -197,7 +199,7 @@ to ejecutarAccion
   ]
   if estadoActual = conflicto
   [
-
+    T-conflicto
   ]
 end
 
@@ -235,6 +237,25 @@ to T-moverse
     set colorActual [color] of myself
     set tiempoColor tiempoMaxColor
   ]
+
+end
+
+to T-conflicto
+  let probContinue random-float 1
+  ifelse probContinue > probConflictoContinue
+  [
+    let sumaPesos peso +  [peso] of conQuienPeleo;;Se define el ganador con una probabilidad basada en el peso de la rana
+    let probGana random sumaPesos
+    ifelse probGana <= peso
+    [ print "ganó el agente: "
+      print who ];;Gano la rana que está ejecutando en el momento, definir consecuencias por ganar
+    [ print "ganó el agente: "
+      print [who] of conQuienPeleo ];;Gana la otra rana, definir consecuencias por perder
+    set estadoActual movimiento
+    ask conQuienPeleo
+    [ set estadoActual movimiento ]
+   ]
+  [ print "Se mantiene el conflicto al menos durante un tic más" ]
 
 end
 
@@ -420,7 +441,7 @@ UmbralDesnutricion
 UmbralDesnutricion
 0
 1
-0.3
+0.23
 0.01
 1
 NIL
@@ -505,7 +526,7 @@ radioDeteccionAmenaza
 radioDeteccionAmenaza
 0
 100
-24
+19
 1
 1
 NIL
@@ -551,6 +572,21 @@ ticsMax
 1
 0
 String
+
+SLIDER
+16
+518
+198
+551
+probConflictoContinue
+probConflictoContinue
+0
+1
+0.1
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## ¿DE QUÉ SE TRATA?
