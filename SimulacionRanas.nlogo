@@ -1,91 +1,89 @@
-globals ;; Para definir las variables globales.
+;; definición de variables globales
+globals
 [
   ;; constantes de estado
   reposo
   movimiento
   conflicto
-  columns
-  rows
-
 ]
 
-to init-globals ;; Para darle valor inicial a las variables globales.
+;; inicialización de variables globales
+to init-globals
   set reposo 0
   set movimiento 1
   set conflicto 2
-
-  set rows floor sqrt cantidadMachos
-  set columns rows
-
 end
 
-to setup ;; Para inicializar la simulación.
+
+;;*******************************
+;; setup:                       *
+;;*******************************
+to setup
   ca           ;; Equivale a clear-ticks + clear-turtles + clear-patches +
                ;; clear-drawing + clear-all-plots + clear-output.
 
-  init-globals ;; Para inicializar variables globales.
+  init-globals
 
-  ;; Para crear tortugas e inicializar tortugas y parcelas además.
-
+  ;; inicialización de parcelas
   ask patches
   [
     P-init
   ]
+
+  ;; inicialiación de agentes
+  ;; la primitiva cro crea tortugas distribuidas
+  ;; uniformemente alrededor del (0, 0). Este
+  ;; centro se localiza en el centro del mundo
   cro CantidadMachos
   [
     jump (floor max-pxcor * 1.2 / 2)
     T-init
   ]
+
   ask patches
   [
     P-update
   ]
 
-  reset-ticks  ;; Para inicializar el contador de ticks.
+  reset-ticks
 end
-
 
 ;;*******************************
 ;; go:                          *
 ;;*******************************
-
-to go ;; Para ejecutar la simulación.
+to go
   ;; revisa si se le debe dar alimento
-  if ticks mod 10 = 0;;Se parte de que se simulan diez horas al día, y no se simula tiempo de descanso.
+  ;; 1 tic es 1 hora
+  ;; se les aumenta el peso cada 10 horas
+  if ticks mod 10 = 0
   [
     ask turtles [T-subirPeso]
   ]
 
   ;; llama al metodo principal de cada rana
-  ask turtles [ T-comportamientoPrincipal ]
-  ask patches [ P-update ]
+  ask turtles [
+    T-comportamientoPrincipal
+  ]
+
+  ask patches [
+    P-update
+  ]
 
   tick
-  actualizar-salidas
 
+  ;; actualizar-salidas
 
-  if ticks >= read-from-string ticsMax  ;; En caso de que la simulación esté controlada por cantidad de ticks.
+  if ticks >= read-from-string ticsMax
     [
       export-view "vista-final.png"
       stop
     ]
 end
 
-
-
-;;*******************************
-;; Otras funciones globales:
-;;*******************************
-
-to actualizar-salidas ;; Para actualizar todas las salidas del modelo.
-end
-
-
-;;*******************************
-;; Definición de agentes tortuga:
-;;*******************************
-
-turtles-own ;; Para definir los atributos de las tortugas.
+;;***********************************
+;; Definición de agentes tortuga:   *
+;;***********************************
+turtles-own ;;
 [
   estadoActual
   tamano
@@ -100,15 +98,7 @@ turtles-own ;; Para definir los atributos de las tortugas.
 
 ]
 
-to T-init
-
-  set tamano random-float 1.76 + 23.04;; Tamaño segun documento "Apuntes lluvia ideas"
-  set peso -0.795 + (0.779 * tamano) ;;Función de Condición que está en el documento "Apuntes luvia ideas"
-
-  set frecuenciaCanto (-3760 * peso) + 3316 ;;Función de frecuencia en documento "Apuntes lluvia idea"
-
-  set color (who * 10) + 5
-  set size 2
+to pintar-parcela-actual
   ask neighbors
   [
     set colorActual [color] of myself
@@ -119,11 +109,24 @@ to T-init
     set colorActual [color] of myself
     set tiempoColor tiempoMaxColor
   ]
+end
+
+to T-init
+  ;; Tamaño segun documento "Apuntes lluvia ideas"
+  set tamano random-float 1.76 + 23.04
+
+  ;; Función de Condición que está en el documento "Apuntes luvia ideas"
+  set peso -0.795 + (0.779 * tamano)
+
+  ;; Función de frecuencia en documento "Apuntes lluvia idea"
+  set frecuenciaCanto (-3760 * peso) + 3316
+
+  set size 2
+
+  pintar-parcela-actual
 
   set estadoActual reposo
-
   set listaAmenazas []
-
 end
 
 to T-comportamientoPrincipal
@@ -132,11 +135,8 @@ to T-comportamientoPrincipal
 
   ;; ejecutar la accion del estado
   ejecutarAccion
-
 end
 
-;; acá se toman las decisiones de si cambio de estado o no
-;; por ahora lo dejé que se quede tonta en reposo
 to reevaluarEstado
   ;; decisiones
   ;; reposo -> movimiento
@@ -145,7 +145,7 @@ to reevaluarEstado
   ;; conflicto -> reposo
   ;; conflicto -> movimiento
 
-   if estadoActual = reposo
+  if estadoActual = reposo
   [
     if peso > pesoInicial * (UmbralDesnutricion + UmbralRecuperacion)
     [
@@ -187,7 +187,6 @@ to reevaluarEstado
 
 end
 
-
 to ejecutarAccion
   if estadoActual = reposo
   [
@@ -210,7 +209,6 @@ end
 
 to T-moverse
   let enSeleccion true ; simular do.... while
-  let i 0
   while [enSeleccion = true]
   [
     let pOrigen patch-here
@@ -223,21 +221,10 @@ to T-moverse
     [
       set enSeleccion false
     ]
-    set i i + 1
   ]
     set peso peso - CostoMovPorTic ;; TODO hacer constante o slider
 
-  ask neighbors
-  [
-    set colorActual [color] of myself
-    set tiempoColor tiempoMaxColor
-  ]
-  ask patch-here
-  [
-    set colorActual [color] of myself
-    set tiempoColor tiempoMaxColor
-  ]
-
+  pintar-parcela-actual
 end
 
 to T-conflicto
@@ -272,15 +259,13 @@ end
 ;;*******************************
 ;; Definición de agentes parcela:
 ;;*******************************
-
-patches-own ;; Para definir los atributos de las parcelas.
+patches-own
 [
   colorActual
   tiempoColor
-
 ]
 
-to P-init ;; Para inicializar una parcela a la vez.
+to P-init
   set colorActual -1
   set tiempoColor -1
 end
@@ -314,14 +299,6 @@ links-own ;; Para definir los atributos de los links o conexiones.
 
 to L-init ;; Para inicializar un link o conexión a la vez.
 
-end
-
-
-to abc
-  ask turtles
-  [
-    print turtles in-radius radioDeteccionAmenaza
-  ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
