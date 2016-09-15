@@ -45,7 +45,11 @@ to setup
   [
     P-update
   ]
-
+  if file-exists? "salida-movimientos.csv"
+  [
+    file-delete "salida-movimientos.csv"
+  ]
+  file-open "salida-movimientos.csv"
   reset-ticks
 end
 
@@ -64,6 +68,7 @@ to go
   ;; llama al metodo principal de cada rana
   ask turtles [
     T-comportamientoPrincipal
+    guardar-Posicion
   ]
 
   ask patches [
@@ -77,6 +82,7 @@ to go
   if ticks >= read-from-string ticsMax
     [
       export-view "vista-final.png"
+      file-close
       stop
     ]
 end
@@ -127,6 +133,10 @@ to T-init
 
   set estadoActual reposo
   set listaAmenazas []
+end
+
+to guardar-Posicion
+  file-print (word ticks ";" who ";" pxcor ";"  pycor)
 end
 
 to T-comportamientoPrincipal
@@ -386,7 +396,7 @@ CantidadMachos
 CantidadMachos
 1
 14
-8
+14
 1
 1
 NIL
@@ -560,7 +570,7 @@ INPUTBOX
 109
 79
 ticsMax
-300
+100
 1
 0
 String
