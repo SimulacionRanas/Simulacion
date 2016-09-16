@@ -19,9 +19,10 @@ end
 ;; setup:                       *
 ;;*******************************
 to setup
-  ca           ;; Equivale a clear-ticks + clear-turtles + clear-patches +
-               ;; clear-drawing + clear-all-plots + clear-output.
-
+  ;; Equivale a clear-ticks + clear-turtles + clear-patches +
+  ;; clear-drawing + clear-all-plots + clear-output.
+  ca
+  
   init-globals
 
   ;; inicialización de parcelas
@@ -95,7 +96,6 @@ turtles-own ;;
   nivelAgresividad
 
   listaAmenazas
-
 ]
 
 to pintar-parcela-actual
@@ -174,17 +174,16 @@ to reevaluarEstado
       print who
       set estadoActual conflicto
       set conQuienPeleo  min-one-of listaAmenazasActuales [distance myself]
+      let my_myself myself
       ask conQuienPeleo
       [
         print "con el agente "
         print who
         set estadoActual conflicto
-        set conQuienPeleo myself
+        set conQuienPeleo my_myself
       ]
-      ;; aca deberia poner el estado a conflicto
     ]
   ]
-
 end
 
 to ejecutarAccion
@@ -231,19 +230,35 @@ to T-conflicto
   let probContinue random-float 1
   ifelse probContinue > probConflictoContinue
   [
-    let sumaPesos peso +  [peso] of conQuienPeleo;;Se define el ganador con una probabilidad basada en el peso de la rana
+    ;;Se define el ganador con una probabilidad basada en el peso de la rana
+    let sumaPesos peso +  [peso] of conQuienPeleo
     let probGana random sumaPesos
     ifelse probGana <= peso
-    [ print "ganó el agente: "
-      print who ];;Gano la rana que está ejecutando en el momento, definir consecuencias por ganar
-    [ print "ganó el agente: "
-      print [who] of conQuienPeleo ];;Gana la otra rana, definir consecuencias por perder
+    [
+      ;; Ganó la rana que está ejecutando en el momento, definir consecuencias por ganar
+      print "ganó el agente: "
+      print who 
+      let my_who who
+      ask conQuienPeleo
+      [
+        lput my_who listaAmenazas
+      ]
+    ]
+    [
+      ;; Ganó la otra rana, definir consecuencias por perder
+      print "ganó el agente: "
+      print [who] of conQuienPeleo 
+      lput [who] of conQuienPeleo listaAmenazas
+    ]
     set estadoActual movimiento
     ask conQuienPeleo
-    [ set estadoActual movimiento ]
-   ]
-  [ print "Se mantiene el conflicto al menos durante un tic más" ]
-
+    [
+      set estadoActual movimiento
+    ]
+  ]
+  [
+    print "Se mantiene el conflicto al menos durante un tic más"
+  ]
 end
 
 to-report esAmenaza [lista a]
