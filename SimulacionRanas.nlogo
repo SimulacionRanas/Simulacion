@@ -217,13 +217,17 @@ to T-subirPeso
 end
 
 to T-moverse
+  ;; netlogo es raro con los num psuedo aleatorios
+  ;; si inicia con la semilla default siempre tira
+  ;; los mismo valores
+  random-seed new-seed
   let enSeleccion true ; simular do.... while
   while [enSeleccion = true]
   [
     let pOrigen patch-here
     facexy random-xcor random-ycor
     jump movimientoPorHora
-    ifelse not can-move? movimientoPorHora or length (list turtles in-radius radioDeteccionAmenaza) > 1
+    ifelse not can-move? movimientoPorHora ;;or length (list turtles in-radius radioDeteccionAmenaza) > 1
     [
       move-to pOrigen
     ]
