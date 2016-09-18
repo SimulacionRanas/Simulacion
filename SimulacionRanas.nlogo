@@ -162,6 +162,9 @@ to reevaluarEstado
       set estadoActual movimiento
     ]
   ]
+  ;;**************************************************************************************
+  ;;Quizás hay que eliminar esta evaluación
+  ;;***********************************************************************************
   if estadoActual = conflicto
   [
     ;; aca deberia evaluar si ya termino conflicto y si si, determina a cual estado
@@ -173,26 +176,6 @@ to reevaluarEstado
    if peso <= pesoInicial * UmbralDesnutricion
     [
       set estadoActual reposo
-    ]
-    ;;Lo siguiente revisa que la rana que se mueva, no está en la lista de amenaza de las ranas cercanas.
-    let listaAmenazasActuales (other turtles in-radius radioDeteccionConflicto) with [estadoActual != conflicto and not esAmenaza listaAmenazas [who] of myself]
-    ;;Lo siguiente revisa que las ranas cercanas no están en la lista de amenazas de la rana que se mueve.
-    print listaAmenazasActuales
-    set listaAmenazasActuales listaAmenazasActuales with [not esAmenaza [listaAmenazas] of myself who]
-    print listaAmenazasActuales
-    if any? listaAmenazasActuales and (random-float 1) < probConflicto
-    [
-      print "conflicto iniciado por "
-      print who
-      set estadoActual conflicto
-      set conQuienPeleo  min-one-of listaAmenazasActuales [distance myself]
-      ask conQuienPeleo
-      [
-        print "con el agente "
-        print who
-        set estadoActual conflicto
-        set conQuienPeleo myself
-      ]
     ]
   ]
 end
@@ -227,8 +210,13 @@ to T-moverse
   [
     let pOrigen patch-here
     facexy random-xcor random-ycor
-    jump movimientoPorHora
-    ifelse not can-move? movimientoPorHora ;;or length (list turtles in-radius radioDeteccionAmenaza) > 1
+    ;;Agregué este random para que la rana no se tenga que mover siempre la misma cantidad de patches
+    ;;sino que puede moverse cualquier catidad de patches entre 0 y movimientosPorHora
+    let salto random movimientoPorHora
+    jump salto
+    ;;Revisa que alguna de las tortugas en el radio de detección de amenaza, sea parte de la lista de amenazas.
+    let listaAmenazasActuales (other turtles in-radius radioDeteccionAmenaza) with [esAmenaza [listaAmenazas] of myself who]
+    ifelse not can-move? salto or count listaAmenazasActuales > 1
     [
       move-to pOrigen
     ]
@@ -237,7 +225,7 @@ to T-moverse
     ]
   ]
     set peso peso - CostoMovPorTic ;; TODO hacer constante o slider
-
+  T-revisar-amenazas
   pintar-parcela-actual
 end
 
@@ -263,7 +251,7 @@ to T-conflicto
       ;; Ganó la otra rana, definir consecuencias por perder
       print "ganó el agente: "
       print [who] of conQuienPeleo
-      ;;Se le pide a la rana que perdió que almacene el id de la rana ganadoragit
+      ;;Se le pide a la rana que perdió que almacene el id de la rana ganadora
       set listaAmenazas lput [who] of conQuienPeleo listaAmenazas
     ]
     set estadoActual movimiento
@@ -277,10 +265,40 @@ to T-conflicto
   ]
 end
 
+to T-revisar-amenazas
+  ;;******************************************************************************************
+  ;;Muevo esto para otro método para que se ejecute luego de que las ranas se muevan, sino,
+  ;;luego de cada conflicto siguen apareciendo las mismas amenazas
+  ;;*******************************************************************************************
+
+   ;;Lo siguiente revisa que la rana que se mueva, no está en la lista de amenaza de las ranas cercanas.
+    let listaAmenazasActuales (other turtles in-radius radioDeteccionConflicto) with [estadoActual != conflicto and not esAmenaza listaAmenazas [who] of myself]
+    ;;Lo siguiente revisa que las ranas cercanas no están en la lista de amenazas de la rana que se mueve.
+    set listaAmenazasActuales listaAmenazasActuales with [not esAmenaza [listaAmenazas] of myself who]
+
+    ;;***************************************************************************************************
+    ;;Y si la siguiente comparación la hacemos con un OR, en vez de un AND, para dejar la posibilidad de
+    ;;que yo vuelva a pelear con una rana con la que perdí??
+    ;;Sólo pregunto
+    ;;***************************************************************************************************
+    if any? listaAmenazasActuales and (random-float 1) < probConflicto
+    [
+      print "conflicto iniciado por "
+      print who
+      set estadoActual conflicto
+      set conQuienPeleo  min-one-of listaAmenazasActuales [distance myself]
+      ask conQuienPeleo
+      [
+        print "con el agente "
+        print who
+        set estadoActual conflicto
+        set conQuienPeleo myself
+      ]
+    ]
+end
+
+
 to-report esAmenaza [lista a]
-  print "revisando amenazas"
-  print a
-  print lista
   let enLista? member? a lista
   report enLista?
 end
