@@ -47,6 +47,7 @@ to setup
   ]
   if file-exists? "salida-movimientos.csv"
   [
+    file-close
     file-delete "salida-movimientos.csv"
   ]
   file-open "salida-movimientos.csv"
@@ -68,7 +69,7 @@ to go
   ;; llama al metodo principal de cada rana
   ask turtles [
     T-comportamientoPrincipal
-    guardar-Posicion
+    T-guardar-posicion
   ]
 
   ask patches [
@@ -92,30 +93,18 @@ end
 ;;***********************************
 turtles-own ;;
 [
-  estadoActual
+  estado-actual
   tamano
   peso
   pesoInicial
-  conQuienPeleo
+  otro-en-conflicto
   ;; esto aun no lo uso acá
   frecuenciaCanto
   nivelAgresividad
 
-  listaAmenazas
+  agentes-amenaza
+  agentes-conflictos-previos
 ]
-
-to pintar-parcela-actual
-  ask neighbors
-  [
-    set colorActual [color] of myself
-    set tiempoColor tiempoMaxColor
-  ]
-  ask patch-here
-  [
-    set colorActual [color] of myself
-    set tiempoColor tiempoMaxColor
-  ]
-end
 
 to T-init
   ;; Tamaño segun documento "Apuntes lluvia ideas"
@@ -129,72 +118,79 @@ to T-init
 
   set size 2
 
-  pintar-parcela-actual
+  T-pintar-parcela-actual
 
-  set estadoActual reposo
-  set listaAmenazas []
-end
+  set estado-actual reposo
 
-to guardar-Posicion
-  file-print (word ticks ";" who ";" pxcor ";"  pycor)
+  set agentes-amenaza []
+  set agentes-conflictos-previos []
 end
 
 to T-comportamientoPrincipal
   ;; primero se evalua si cambio de estado no
-  reevaluarEstado
+  T-reevaluar-estado
 
   ;; ejecutar la accion del estado
-  ejecutarAccion
+  T-ejecutar-accion
 end
 
-to reevaluarEstado
-  ;; decisiones
-  ;; reposo -> movimiento
-  ;; movimiento -> reposo
-  ;; movimiento -> conflicto
-  ;; conflicto -> reposo
-  ;; conflicto -> movimiento
+to T-guardar-posicion
+  file-print (word ticks ";" who ";" pxcor ";"  pycor)
+end
 
-  if estadoActual = reposo
+to T-pintar-parcela-actual
+  ask neighbors
+  [
+    set colorActual [color] of myself
+    set tiempoColor tiempoMaxColor
+  ]
+  ask patch-here
+  [
+    set colorActual [color] of myself
+    set tiempoColor tiempoMaxColor
+  ]
+end
+
+to T-reevaluar-estado
+  if estado-actual = reposo
   [
     if peso > pesoInicial * (UmbralDesnutricion + UmbralRecuperacion)
     [
-      set estadoActual movimiento
+      set estado-actual movimiento
     ]
   ]
   ;;**************************************************************************************
   ;;Quizás hay que eliminar esta evaluación
   ;;***********************************************************************************
-  if estadoActual = conflicto
+  if estado-actual = conflicto
   [
     ;; aca deberia evaluar si ya termino conflicto y si si, determina a cual estado
     ;; cambiar
-    ;set estadoActual movimiento
+    ;set estado-actual movimiento
   ]
-  if estadoActual = movimiento
+  if estado-actual = movimiento
   [
    if peso <= pesoInicial * UmbralDesnutricion
     [
-      set estadoActual reposo
+      set estado-actual reposo
     ]
   ]
 end
 
-to ejecutarAccion
-  if estadoActual = reposo
+to T-ejecutar-accion
+  if estado-actual = reposo
   [
     set peso peso + CostoMovPorTic
   ]
-  if estadoActual = movimiento
+  if estado-actual = movimiento
   [
    T-moverse
   ]
-  if estadoActual = conflicto
+  if estado-actual = conflicto
   [
     T-conflicto
   ]
 end
-
 
 to T-subirPeso
   set peso peso + PesoPorDia
@@ -208,17 +204,20 @@ to T-moverse
   let enSeleccion true ; simular do.... while
   while [enSeleccion = true]
   [
-    let pOrigen patch-here
+    let patch-origen patch-here
     facexy random-xcor random-ycor
-    ;;Agregué este random para que la rana no se tenga que mover siempre la misma cantidad de patches
-    ;;sino que puede moverse cualquier catidad de patches entre 0 y movimientosPorHora
+
+    ;; Agregué este random para que la rana no se tenga que mover siempre la misma cantidad de patches
+    ;; sino que puede moverse cualquier catidad de patches entre 0 y movimientosPorHora
+    ;; TODO: preguntar a los biólogos si quieren esto
     let salto random movimientoPorHora
     jump salto
-    ;;Revisa que alguna de las tortugas en el radio de detección de amenaza, sea parte de la lista de amenazas.
-    let listaAmenazasActuales (other turtles in-radius radioDeteccionAmenaza) with [esAmenaza [listaAmenazas] of myself who]
-    ifelse not can-move? salto or count listaAmenazasActuales > 1
+
+    ;; Revisa que alguna de las tortugas en el radio de detección de amenaza, sea parte de la lista de amenazas.
+    let agentes-amenazaActuales (other turtles in-radius radioDeteccionAmenaza) with [T-en-lista [agentes-amenaza] of myself who]
+    ifelse not can-move? salto or count agentes-amenazaActuales > 1
     [
-      move-to pOrigen
+      move-to patch-origen
     ]
     [
       set enSeleccion false
@@ -226,7 +225,7 @@ to T-moverse
   ]
     set peso peso - CostoMovPorTic ;; TODO hacer constante o slider
   T-revisar-amenazas
-  pintar-parcela-actual
+  T-pintar-parcela-actual
 end
 
 to T-conflicto
@@ -234,30 +233,43 @@ to T-conflicto
   ifelse probContinue > probConflictoContinue
   [
     ;;Se define el ganador con una probabilidad basada en el peso de la rana
-    let sumaPesos peso +  [peso] of conQuienPeleo
+    let sumaPesos peso +  [peso] of otro-en-conflicto
     let probGana random sumaPesos
     ifelse probGana <= peso
     [
       ;; Ganó la rana que está ejecutando en el momento, definir consecuencias por ganar
       print "ganó el agente: "
       print who
-      let my_who who
-      ask conQuienPeleo;;Se le pide a la rana que perdió que almacene el id de la rana ganadora
+
+      set agentes-conflictos-previos lput [who] of otro-en-conflicto agentes-conflictos-previos
+      ;; Se le pide a la rana que perdió que almacene el id de la rana ganadora
+      ask otro-en-conflicto
       [
-        set listaAmenazas lput [who] of myself listaAmenazas
+        set agentes-conflictos-previos lput [who] of myself agentes-conflictos-previos
+        set agentes-amenaza lput [who] of myself agentes-amenaza
+        print agentes-amenaza
       ]
     ]
     [
       ;; Ganó la otra rana, definir consecuencias por perder
       print "ganó el agente: "
-      print [who] of conQuienPeleo
-      ;;Se le pide a la rana que perdió que almacene el id de la rana ganadora
-      set listaAmenazas lput [who] of conQuienPeleo listaAmenazas
+      print [who] of otro-en-conflicto
+
+      set agentes-conflictos-previos lput [who] of otro-en-conflicto agentes-conflictos-previos
+      ask otro-en-conflicto
+      [
+        set agentes-conflictos-previos lput [who] of myself agentes-conflictos-previos
+      ]
+      ;; Se le pide a la rana que perdió que almacene el id de la rana ganadora
+      set agentes-amenaza lput [who] of otro-en-conflicto agentes-amenaza
+      print agentes-amenaza
     ]
-    set estadoActual movimiento
-    ask conQuienPeleo
+    ;; TODO: esto hay que reepensarlo luego de que implementemos los "castigos"
+    ;; luego de una pelea
+    set estado-actual movimiento
+    ask otro-en-conflicto
     [
-      set estadoActual movimiento
+      set estado-actual movimiento
     ]
   ]
   [
@@ -267,38 +279,45 @@ end
 
 to T-revisar-amenazas
   ;;******************************************************************************************
-  ;;Muevo esto para otro método para que se ejecute luego de que las ranas se muevan, sino,
-  ;;luego de cada conflicto siguen apareciendo las mismas amenazas
+  ;; Muevo esto para otro método para que se ejecute luego de que las ranas se muevan, sino,
+  ;; luego de cada conflicto siguen apareciendo las mismas amenazas
+  ;; ese comportamiento sucede porque no teníamos una lista guardada con los conflictos previos,
+  ;; sea que se ganaron o no, entonces por eso se repetían
   ;;*******************************************************************************************
 
-   ;;Lo siguiente revisa que la rana que se mueva, no está en la lista de amenaza de las ranas cercanas.
-    let listaAmenazasActuales (other turtles in-radius radioDeteccionConflicto) with [estadoActual != conflicto and not esAmenaza listaAmenazas [who] of myself]
-    ;;Lo siguiente revisa que las ranas cercanas no están en la lista de amenazas de la rana que se mueve.
-    set listaAmenazasActuales listaAmenazasActuales with [not esAmenaza [listaAmenazas] of myself who]
+
+  ;;Lo siguiente revisa que la rana que se mueva, no está en la lista de amenaza de las ranas cercanas.
+    let posibles-agentes-conflicto (other turtles in-radius radioDeteccionConflicto) with [not T-en-lista [agentes-conflictos-previos] of myself who]
 
     ;;***************************************************************************************************
-    ;;Y si la siguiente comparación la hacemos con un OR, en vez de un AND, para dejar la posibilidad de
-    ;;que yo vuelva a pelear con una rana con la que perdí??
-    ;;Sólo pregunto
+    ;; Y si la siguiente comparación la hacemos con un OR, en vez de un AND, para dejar la posibilidad de
+    ;; que yo vuelva a pelear con una rana con la que perdí??
+    ;; Sólo pregunto
+    ;;
+    ;; es una AND porque si lo dejamos en OR y la lista está vacía el programa se cae porque no encuentra
+    ;; el min-one-of posibles-agentes-conflicto [distance myself]
+    ;;
+    ;; TODO: preguntarle a los biologos si luego que la rana pierde conflicto no se puede enfrentar entre
+    ;; ellos de nuevo
     ;;***************************************************************************************************
-    if any? listaAmenazasActuales and (random-float 1) < probConflicto
+    if any? posibles-agentes-conflicto and (random-float 1) < probConflicto
     [
       print "conflicto iniciado por "
       print who
-      set estadoActual conflicto
-      set conQuienPeleo  min-one-of listaAmenazasActuales [distance myself]
-      ask conQuienPeleo
+      set estado-actual conflicto
+      set otro-en-conflicto  min-one-of posibles-agentes-conflicto [distance myself]
+      ask otro-en-conflicto
       [
         print "con el agente "
         print who
-        set estadoActual conflicto
-        set conQuienPeleo myself
+        set estado-actual conflicto
+        set otro-en-conflicto myself
       ]
     ]
 end
 
 
-to-report esAmenaza [lista a]
+to-report T-en-lista [lista a]
   let enLista? member? a lista
   report enLista?
 end
