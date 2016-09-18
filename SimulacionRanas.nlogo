@@ -174,23 +174,24 @@ to reevaluarEstado
     [
       set estadoActual reposo
     ]
-
-    let myWho who
-    let listaAmenazasActuales (turtles in-radius radioDeteccionConflicto) with [who != mywho and estadoActual != conflicto and not esAmenaza listaAmenazas who]
-
+    ;;Lo siguiente revisa que la rana que se mueva, no está en la lista de amenaza de las ranas cercanas.
+    let listaAmenazasActuales (other turtles in-radius radioDeteccionConflicto) with [estadoActual != conflicto and not esAmenaza listaAmenazas [who] of myself]
+    ;;Lo siguiente revisa que las ranas cercanas no están en la lista de amenazas de la rana que se mueve.
+    print listaAmenazasActuales
+    set listaAmenazasActuales listaAmenazasActuales with [not esAmenaza [listaAmenazas] of myself who]
+    print listaAmenazasActuales
     if any? listaAmenazasActuales and (random-float 1) < probConflicto
     [
       print "conflicto iniciado por "
       print who
       set estadoActual conflicto
       set conQuienPeleo  min-one-of listaAmenazasActuales [distance myself]
-      let my_myself myself
       ask conQuienPeleo
       [
         print "con el agente "
         print who
         set estadoActual conflicto
-        set conQuienPeleo my_myself
+        set conQuienPeleo myself
       ]
     ]
   ]
@@ -262,7 +263,7 @@ to T-conflicto
       ;; Ganó la otra rana, definir consecuencias por perder
       print "ganó el agente: "
       print [who] of conQuienPeleo
-      ;;Se le pide a la rana que perdió que almacene el id de la rana ganadora
+      ;;Se le pide a la rana que perdió que almacene el id de la rana ganadoragit
       set listaAmenazas lput [who] of conQuienPeleo listaAmenazas
     ]
     set estadoActual movimiento
@@ -277,12 +278,11 @@ to T-conflicto
 end
 
 to-report esAmenaza [lista a]
-  let res false
-  foreach lista
-  [
-    set res res or ? = a
-  ]
-  report res
+  print "revisando amenazas"
+  print a
+  print lista
+  let enLista? member? a lista
+  report enLista?
 end
 
 
