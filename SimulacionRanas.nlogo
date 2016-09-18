@@ -1,118 +1,144 @@
-globals ;; Para definir las variables globales.
+;; definición de variables globales
+globals
 [
   ;; constantes de estado
   reposo
   movimiento
   conflicto
-  columns
-  rows
-
 ]
 
-to init-globals ;; Para darle valor inicial a las variables globales.
+;; inicialización de variables globales
+to init-globals
   set reposo 0
   set movimiento 1
   set conflicto 2
-
-  set rows floor sqrt cantidadMachos
-  set columns rows
-
 end
 
-to setup ;; Para inicializar la simulación.
-  ca           ;; Equivale a clear-ticks + clear-turtles + clear-patches +
-               ;; clear-drawing + clear-all-plots + clear-output.
 
-  init-globals ;; Para inicializar variables globales.
+;;*******************************
+;; setup:                       *
+;;*******************************
+to setup
+  ;; Equivale a clear-ticks + clear-turtles + clear-patches +
+  ;; clear-drawing + clear-all-plots + clear-output.
+  ca
 
-  ;; Para crear tortugas e inicializar tortugas y parcelas además.
+  init-globals
 
+  ;; inicialización de parcelas
   ask patches
   [
     P-init
   ]
-  crt CantidadMachos
+
+  ;; inicialiación de agentes
+  ;; la primitiva cro crea tortugas distribuidas
+  ;; uniformemente alrededor del (0, 0). Este
+  ;; centro se localiza en el centro del mundo
+  cro CantidadMachos
   [
+    jump (floor max-pxcor * 1.2 / 2)
     T-init
   ]
+
   ask patches
   [
     P-update
   ]
-
-  reset-ticks  ;; Para inicializar el contador de ticks.
+  if file-exists? "salida-movimientos.csv"
+  [
+    file-close
+    file-delete "salida-movimientos.csv"
+  ]
+  file-open "salida-movimientos.csv"
+  reset-ticks
 end
-
 
 ;;*******************************
 ;; go:                          *
 ;;*******************************
-
-to go ;; Para ejecutar la simulación.
+to go
   ;; revisa si se le debe dar alimento
-  if ticks mod 10 = 0;;Se parte de que se simulan diez horas al día, y no se simula tiempo de descanso.
+  ;; 1 tic es 1 hora
+  ;; se les aumenta el peso cada 10 horas
+  if ticks mod 10 = 0
   [
     ask turtles [T-subirPeso]
   ]
 
   ;; llama al metodo principal de cada rana
-  ask turtles [ T-comportamientoPrincipal ]
-  ask patches [ P-update ]
+  ask turtles [
+    T-comportamientoPrincipal
+    T-guardar-posicion
+  ]
+
+  ask patches [
+    P-update
+  ]
 
   tick
-  actualizar-salidas
 
+  ;; actualizar-salidas
 
-  if ticks >= read-from-string ticsMax  ;; En caso de que la simulación esté controlada por cantidad de ticks.
+  if ticks >= read-from-string ticsMax
     [
       export-view "vista-final.png"
+      file-close
       stop
     ]
 end
 
-
-
-;;*******************************
-;; Otras funciones globales:
-;;*******************************
-
-to actualizar-salidas ;; Para actualizar todas las salidas del modelo.
-end
-
-
-;;*******************************
-;; Definición de agentes tortuga:
-;;*******************************
-
-turtles-own ;; Para definir los atributos de las tortugas.
+;;***********************************
+;; Definición de agentes tortuga:   *
+;;***********************************
+turtles-own ;;
 [
-  estadoActual
+  estado-actual
   tamano
   peso
   pesoInicial
-
+  otro-en-conflicto
   ;; esto aun no lo uso acá
   frecuenciaCanto
   nivelAgresividad
 
-  listaAmenazas
-
+  agentes-amenaza
+  agentes-conflictos-previos
 ]
 
 to T-init
-  let row floor (who / rows) + 1
-  let column who mod columns + 1
-  set row row * ((floor 230 / rows) + 1)
-  set column column * ((floor 230 / columns) + 1)
-  setxy column row
+  ;; Tamaño segun documento "Apuntes lluvia ideas"
+  set tamano random-float 1.76 + 23.04
 
-  set tamano random-float 1.76 + 23.04;; Tamaño segun documento "Apuntes lluvia ideas"
-  set peso -0.795 + (0.779 * tamano) ;;Función de Condición que está en el documento "Apuntes luvia ideas"
+  ;; Función de Condición que está en el documento "Apuntes luvia ideas"
+  set peso -0.795 + (0.779 * tamano)
 
-  set frecuenciaCanto (-3760 * peso) + 3316 ;;Función de frecuencia en documento "Apuntes lluvia idea"
+  ;; Función de frecuencia en documento "Apuntes lluvia idea"
+  set frecuenciaCanto (-3760 * peso) + 3316
 
-  set color (who * 10) + 5
   set size 2
+
+  T-pintar-parcela-actual
+
+  set estado-actual reposo
+
+  set agentes-amenaza []
+  set agentes-conflictos-previos []
+end
+
+to T-comportamientoPrincipal
+  ;; primero se evalua si cambio de estado no
+  T-reevaluar-estado
+
+  ;; ejecutar la accion del estado
+  T-ejecutar-accion
+end
+
+to T-guardar-posicion
+  file-print (word ticks ";" who ";" pxcor ";"  pycor)
+end
+
+to T-pintar-parcela-actual
   ask neighbors
   [
     set colorActual [color] of myself
@@ -123,135 +149,190 @@ to T-init
     set colorActual [color] of myself
     set tiempoColor tiempoMaxColor
   ]
-
-  set estadoActual reposo
-
-  set listaAmenazas []
-
 end
 
-to T-comportamientoPrincipal
-  ;; primero se evalua si cambio de estado no
-  reevaluarEstado
-
-  ;; ejecutar la accion del estado
-  ejecutarAccion
-
-end
-
-;; acá se toman las decisiones de si cambio de estado o no
-;; por ahora lo dejé que se quede tonta en reposo
-to reevaluarEstado
-  ;; decisiones
-  ;; reposo -> movimiento
-  ;; movimiento -> reposo
-  ;; movimiento -> conflicto
-  ;; conflicto -> reposo
-  ;; conflicto -> movimiento
-
-   if estadoActual = reposo
+to T-reevaluar-estado
+  if estado-actual = reposo
   [
     if peso > pesoInicial * (UmbralDesnutricion + UmbralRecuperacion)
     [
-      set estadoActual movimiento
+      set estado-actual movimiento
     ]
   ]
-  if estadoActual = movimiento
-  [
-   if peso <= pesoInicial * UmbralDesnutricion
-    [
-      set estadoActual reposo
-    ]
-    let listaAmenazasActuales (turtles in-radius radioDeteccionConflicto) with [NoEsAmenaza listaAmenazas who]
-
-    if any? listaAmenazasActuales and (random-float 1) < probConflicto
-    [
-      print "conflicto"
-      ;; aca deberia poner el estado a conlficto
-    ]
-  ]
-  if estadoActual = conflicto
+  ;;**************************************************************************************
+  ;;Quizás hay que eliminar esta evaluación
+  ;;***********************************************************************************
+  if estado-actual = conflicto
   [
     ;; aca deberia evaluar si ya termino conflicto y si si, determina a cual estado
     ;; cambiar
+    ;set estado-actual movimiento
+  ]
+  if estado-actual = movimiento
+  [
+   if peso <= pesoInicial * UmbralDesnutricion
+    [
+      set estado-actual reposo
+    ]
   ]
 end
 
-
-to ejecutarAccion
-  if estadoActual = reposo
+to T-ejecutar-accion
+  if estado-actual = reposo
   [
     set peso peso + CostoMovPorTic
   ]
-  if estadoActual = movimiento
+  if estado-actual = movimiento
   [
    T-moverse
   ]
-  if estadoActual = conflicto
+  if estado-actual = conflicto
   [
-
+    T-conflicto
   ]
 end
-
 
 to T-subirPeso
   set peso peso + PesoPorDia
 end
 
 to T-moverse
+  ;; netlogo es raro con los num psuedo aleatorios
+  ;; si inicia con la semilla default siempre tira
+  ;; los mismo valores
+  random-seed new-seed
   let enSeleccion true ; simular do.... while
-  let i 0
   while [enSeleccion = true]
   [
-    let pOrigen patch-here
-    setxy random-xcor random-ycor
-    fd movimientoPorHora
-    ifelse length (list turtles in-radius radioDeteccionAmenaza) > 1
+    let patch-origen patch-here
+    facexy random-xcor random-ycor
+
+    ;; Agregué este random para que la rana no se tenga que mover siempre la misma cantidad de patches
+    ;; sino que puede moverse cualquier catidad de patches entre 0 y movimientosPorHora
+    ;; TODO: preguntar a los biólogos si quieren esto
+    let salto random movimientoPorHora
+    jump salto
+
+    ;; Revisa que alguna de las tortugas en el radio de detección de amenaza, sea parte de la lista de amenazas.
+    let agentes-amenazaActuales (other turtles in-radius radioDeteccionAmenaza) with [T-en-lista [agentes-amenaza] of myself who]
+    ifelse not can-move? salto or count agentes-amenazaActuales > 1
     [
-      move-to pOrigen
+      move-to patch-origen
     ]
     [
       set enSeleccion false
     ]
-    set i i + 1
   ]
     set peso peso - CostoMovPorTic ;; TODO hacer constante o slider
-
-  ask neighbors
-  [
-    set colorActual [color] of myself
-    set tiempoColor tiempoMaxColor
-  ]
-  ask patch-here
-  [
-    set colorActual [color] of myself
-    set tiempoColor tiempoMaxColor
-  ]
-
+  T-revisar-amenazas
+  T-pintar-parcela-actual
 end
 
-to-report NoEsAmenaza [lista a]
-  let res false
-  foreach lista
+to T-conflicto
+  let probContinue random-float 1
+  ifelse probContinue > probConflictoContinue
   [
-    set res res or ? = a
+    ;;Se define el ganador con una probabilidad basada en el peso de la rana
+    let sumaPesos peso +  [peso] of otro-en-conflicto
+    let probGana random sumaPesos
+    ifelse probGana <= peso
+    [
+      ;; Ganó la rana que está ejecutando en el momento, definir consecuencias por ganar
+      print "ganó el agente: "
+      print who
+
+      set agentes-conflictos-previos lput [who] of otro-en-conflicto agentes-conflictos-previos
+      ;; Se le pide a la rana que perdió que almacene el id de la rana ganadora
+      ask otro-en-conflicto
+      [
+        set agentes-conflictos-previos lput [who] of myself agentes-conflictos-previos
+        set agentes-amenaza lput [who] of myself agentes-amenaza
+        print agentes-amenaza
+      ]
+    ]
+    [
+      ;; Ganó la otra rana, definir consecuencias por perder
+      print "ganó el agente: "
+      print [who] of otro-en-conflicto
+
+      set agentes-conflictos-previos lput [who] of otro-en-conflicto agentes-conflictos-previos
+      ask otro-en-conflicto
+      [
+        set agentes-conflictos-previos lput [who] of myself agentes-conflictos-previos
+      ]
+      ;; Se le pide a la rana que perdió que almacene el id de la rana ganadora
+      set agentes-amenaza lput [who] of otro-en-conflicto agentes-amenaza
+      print agentes-amenaza
+    ]
+    ;; TODO: esto hay que reepensarlo luego de que implementemos los "castigos"
+    ;; luego de una pelea
+    set estado-actual movimiento
+    ask otro-en-conflicto
+    [
+      set estado-actual movimiento
+    ]
   ]
-  report not res
+  [
+    print "Se mantiene el conflicto al menos durante un tic más"
+  ]
+end
+
+to T-revisar-amenazas
+  ;;******************************************************************************************
+  ;; Muevo esto para otro método para que se ejecute luego de que las ranas se muevan, sino,
+  ;; luego de cada conflicto siguen apareciendo las mismas amenazas
+  ;; ese comportamiento sucede porque no teníamos una lista guardada con los conflictos previos,
+  ;; sea que se ganaron o no, entonces por eso se repetían
+  ;;*******************************************************************************************
+
+
+  ;;Lo siguiente revisa que la rana que se mueva, no está en la lista de amenaza de las ranas cercanas.
+    let posibles-agentes-conflicto (other turtles in-radius radioDeteccionConflicto) with [not T-en-lista [agentes-conflictos-previos] of myself who]
+
+    ;;***************************************************************************************************
+    ;; Y si la siguiente comparación la hacemos con un OR, en vez de un AND, para dejar la posibilidad de
+    ;; que yo vuelva a pelear con una rana con la que perdí??
+    ;; Sólo pregunto
+    ;;
+    ;; es una AND porque si lo dejamos en OR y la lista está vacía el programa se cae porque no encuentra
+    ;; el min-one-of posibles-agentes-conflicto [distance myself]
+    ;;
+    ;; TODO: preguntarle a los biologos si luego que la rana pierde conflicto no se puede enfrentar entre
+    ;; ellos de nuevo
+    ;;***************************************************************************************************
+    if any? posibles-agentes-conflicto and (random-float 1) < probConflicto
+    [
+      print "conflicto iniciado por "
+      print who
+      set estado-actual conflicto
+      set otro-en-conflicto  min-one-of posibles-agentes-conflicto [distance myself]
+      ask otro-en-conflicto
+      [
+        print "con el agente "
+        print who
+        set estado-actual conflicto
+        set otro-en-conflicto myself
+      ]
+    ]
+end
+
+
+to-report T-en-lista [lista a]
+  let enLista? member? a lista
+  report enLista?
 end
 
 
 ;;*******************************
 ;; Definición de agentes parcela:
 ;;*******************************
-
-patches-own ;; Para definir los atributos de las parcelas.
+patches-own
 [
   colorActual
   tiempoColor
-
 ]
 
-to P-init ;; Para inicializar una parcela a la vez.
+to P-init
   set colorActual -1
   set tiempoColor -1
 end
@@ -286,35 +367,27 @@ links-own ;; Para definir los atributos de los links o conexiones.
 to L-init ;; Para inicializar un link o conexión a la vez.
 
 end
-
-
-to abc
-  ask turtles
-  [
-    print turtles in-radius radioDeteccionAmenaza
-  ]
-end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
 10
-2530
-2351
--1
--1
-10.0
+773
+594
+230
+230
+1.2
 1
 10
 1
 1
 1
 0
-1
-1
-1
 0
+0
+1
+-230
 230
-0
+-230
 230
 0
 0
@@ -364,8 +437,8 @@ SLIDER
 CantidadMachos
 CantidadMachos
 1
-100
-36
+14
+14
 1
 1
 NIL
@@ -412,7 +485,7 @@ UmbralDesnutricion
 UmbralDesnutricion
 0
 1
-0.3
+0.23
 0.01
 1
 NIL
@@ -464,25 +537,25 @@ NIL
 HORIZONTAL
 
 SLIDER
-33
-587
-205
-620
+32
+616
+204
+649
 tiempoMaxColor
 tiempoMaxColor
 0
 100
-19
+10
 1
 1
 NIL
 HORIZONTAL
 
 TEXTBOX
-55
-522
-205
-578
+54
+551
+204
+607
 Cantidad de tics para que la marca se borre, el color va desvaneciendo conforme los tics
 11
 0.0
@@ -490,14 +563,14 @@ Cantidad de tics para que la marca se borre, el color va desvaneciendo conforme 
 
 SLIDER
 16
-481
+484
 198
-514
+517
 radioDeteccionAmenaza
 radioDeteccionAmenaza
 0
 100
-23
+19
 1
 1
 NIL
@@ -519,10 +592,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-32
-411
-204
-444
+25
+409
+197
+442
 probConflicto
 probConflicto
 0
@@ -539,10 +612,25 @@ INPUTBOX
 109
 79
 ticsMax
-200
+100
 1
 0
 String
+
+SLIDER
+16
+518
+198
+551
+probConflictoContinue
+probConflictoContinue
+0
+1
+0.1
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## ¿DE QUÉ SE TRATA?

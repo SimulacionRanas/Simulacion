@@ -1,8 +1,0 @@
-to T-init-hembra
-  setxy random-xcor random-ycor
-  set tamano random-float 0.16 + 0.96
-  set color yellow
-  set sexo hembra
-  set edad 10
-  set peleando? true
-end
