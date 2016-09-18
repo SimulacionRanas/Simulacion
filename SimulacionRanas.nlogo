@@ -22,7 +22,7 @@ to setup
   ;; Equivale a clear-ticks + clear-turtles + clear-patches +
   ;; clear-drawing + clear-all-plots + clear-output.
   ca
-  
+
   init-globals
 
   ;; inicialización de parcelas
@@ -251,18 +251,19 @@ to T-conflicto
     [
       ;; Ganó la rana que está ejecutando en el momento, definir consecuencias por ganar
       print "ganó el agente: "
-      print who 
+      print who
       let my_who who
-      ask conQuienPeleo
+      ask conQuienPeleo;;Se le pide a la rana que perdió que almacene el id de la rana ganadora
       [
-        lput my_who listaAmenazas
+        set listaAmenazas lput [who] of myself listaAmenazas
       ]
     ]
     [
       ;; Ganó la otra rana, definir consecuencias por perder
       print "ganó el agente: "
-      print [who] of conQuienPeleo 
-      lput [who] of conQuienPeleo listaAmenazas
+      print [who] of conQuienPeleo
+      ;;Se le pide a la rana que perdió que almacene el id de la rana ganadora
+      set listaAmenazas lput [who] of conQuienPeleo listaAmenazas
     ]
     set estadoActual movimiento
     ask conQuienPeleo
