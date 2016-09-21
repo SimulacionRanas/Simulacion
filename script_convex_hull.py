@@ -1,5 +1,6 @@
 import numpy as n, matplotlib.pyplot as plt, pylab as p, time
 
+# http://scipy.github.io/devdocs/generated/scipy.spatial.ConvexHull.html
 
 def get_points():
     # extraigo del csv las marcas
