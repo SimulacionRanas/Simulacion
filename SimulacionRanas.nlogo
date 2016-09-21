@@ -35,9 +35,10 @@ to setup
   ;; la primitiva cro crea tortugas distribuidas
   ;; uniformemente alrededor del (0, 0). Este
   ;; centro se localiza en el centro del mundo
-  cro CantidadMachos
+  crt CantidadMachos ;; cro CantidadMachos
   [
-    jump (floor max-pxcor * 1.2 / 2)
+    setxy random-pxcor random-pycor
+    ;; jump (floor max-pxcor * 1.2 / 2)
     T-init
   ]
 
