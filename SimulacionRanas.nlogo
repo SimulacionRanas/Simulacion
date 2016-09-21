@@ -237,7 +237,7 @@ to R-moverse
 
     if not any? amenazas and can-move? movimiento-por-tic
     [
-      let marcas-terreno marcas
+      let marcas-terreno marcas with [who-padre = [who] of myself]
         in-cone movimiento-por-tic arco
 
       ifelse any? marcas-terreno
