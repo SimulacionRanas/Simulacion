@@ -1,5 +1,32 @@
 import numpy as n, matplotlib.pyplot as plt, pylab as p, time
 
+
+def get_points():
+    # extraigo del csv las marcas
+    m = n.loadtxt(open("salida-movimientos.csv","rb"),delimiter=";",skiprows=0)
+
+    # busco el ultimo tic y el la cantidad de ranas
+    max_tic = m[:,0].max()
+    max_id = m[:,1].max()
+    
+    ultimos_tics = 10
+    
+    a = int( (max_id + 1) * (max_tic - ultimos_tics - 1) ) - 1
+    
+    # extraigo las ultimas 10 marcas de cada rana
+    m = m[a:-1,:]
+    
+    # ordeno por id de rana
+    m = m[n.argsort(m[:,1])]
+    
+    m = m[:, [2,3]]
+    
+    conjuntos = n.split(m, ultimos_tics)
+    
+    return conjuntos[0]
+
+
+
 def _angle_to_point(point, centre):
     '''calculate angle in 2-D between points and x axis'''
     delta = point - centre
@@ -83,6 +110,6 @@ Recursively eliminates points that lie inside two neighbouring points until only
     return n.asarray(pts)
 
 if __name__ == "__main__":
-    points = n.random.random_sample((2,40))
+    points = get_points().transpose()
     hull_pts = convex_hull(points)
     print(hull_pts)
