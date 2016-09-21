@@ -146,6 +146,9 @@ to R-init
 
   set agentes-amenaza []
   set agentes-conflictos-previos []
+
+  set label (word who " " agentes-amenaza)
+  set label-color black
 end
 
 to R-comportamientoPrincipal
@@ -292,8 +295,9 @@ to R-dejar-marca
   hatch-marcas 1 [
     set color [color] of myself
     set edad 0
-    set size 2
+    set size 5
     set who-padre [who] of myself
+    set label ""
   ]
 end
 
@@ -317,6 +321,7 @@ to R-conflicto
       [
         set agentes-conflictos-previos lput [who] of myself agentes-conflictos-previos
         set agentes-amenaza lput [who] of myself agentes-amenaza
+        set label (word who " " agentes-amenaza)
         print agentes-amenaza
       ]
     ]
@@ -332,6 +337,7 @@ to R-conflicto
       ]
       ;; Se le pide a la rana que perdió que almacene el id de la rana ganadora
       set agentes-amenaza lput [who] of otro-en-conflicto agentes-amenaza
+      set label (word who " " agentes-amenaza)
       print agentes-amenaza
     ]
     ;; TODO: esto hay que reepensarlo luego de que implementemos los "castigos"
@@ -441,13 +447,13 @@ end
 GRAPHICS-WINDOW
 425
 10
-988
-594
+1126
+732
 230
 230
-1.2
+1.5
 1
-10
+14
 1
 1
 1
