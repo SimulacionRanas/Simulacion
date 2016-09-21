@@ -270,7 +270,7 @@ to R-moverse
     [
       random-seed new-seed
       let p random-float 1
-      ifelse prob-exploracion < p
+      ifelse p < prob-exploracion
       [
         let camino-elegido one-of caminos-nuevos
         set heading camino-elegido
