@@ -1,3 +1,6 @@
+breed [ranas rana]
+breed [marcas marca]
+
 ;; definición de variables globales
 globals
 [
@@ -19,7 +22,7 @@ end
 ;; setup:                       *
 ;;*******************************
 to setup
-  ;; Equivale a clear-ticks + clear-turtles + clear-patches +
+  ;; Equivale a clear-ticks + clear-ranas + clear-patches +
   ;; clear-drawing + clear-all-plots + clear-output.
   ca
 
@@ -35,11 +38,11 @@ to setup
   ;; la primitiva cro crea tortugas distribuidas
   ;; uniformemente alrededor del (0, 0). Este
   ;; centro se localiza en el centro del mundo
-  crt CantidadMachos ;; cro CantidadMachos
+  create-ranas cantidad-ranas ;; crt cantidad-ranas ;; cro cantidad-ranas
   [
     setxy random-pxcor random-pycor
-    ;; jump (floor max-pxcor * 1.2 / 2)
-    T-init
+    ;;jump (floor max-pxcor * 1.2 / 2)
+    R-init
   ]
 
   ask patches
@@ -64,13 +67,20 @@ to go
   ;; se les aumenta el peso cada 10 horas
   if ticks mod 10 = 0
   [
-    ask turtles [T-subirPeso]
+    ask ranas [R-subirPeso]
+  ]
+
+  ask marcas
+  [
+    if edad = tiempo-vida-marca [ die ]
+    set edad edad + 1
+
   ]
 
   ;; llama al metodo principal de cada rana
-  ask turtles [
-    T-comportamientoPrincipal
-    T-guardar-posicion
+  ask ranas [
+    R-comportamientoPrincipal
+    R-guardar-posicion
   ]
 
   ask patches [
@@ -89,10 +99,17 @@ to go
     ]
 end
 
+
+
 ;;***********************************
-;; Definición de agentes tortuga:   *
+;; Definición de agentes:           *
 ;;***********************************
-turtles-own ;;
+marcas-own
+[
+  edad
+]
+
+ranas-own ;;
 [
   estado-actual
   tamano
@@ -107,7 +124,7 @@ turtles-own ;;
   agentes-conflictos-previos
 ]
 
-to T-init
+to R-init
   ;; Tamaño segun documento "Apuntes lluvia ideas"
   set tamano random-float 1.76 + 23.04
 
@@ -117,9 +134,9 @@ to T-init
   ;; Función de frecuencia en documento "Apuntes lluvia idea"
   set frecuenciaCanto (-3760 * peso) + 3316
 
-  set size 2
+  set size 10
 
-  T-pintar-parcela-actual
+  R-pintar-parcela-actual
 
   set estado-actual reposo
 
@@ -127,32 +144,32 @@ to T-init
   set agentes-conflictos-previos []
 end
 
-to T-comportamientoPrincipal
+to R-comportamientoPrincipal
   ;; primero se evalua si cambio de estado no
-  T-reevaluar-estado
+  R-reevaluar-estado
 
   ;; ejecutar la accion del estado
-  T-ejecutar-accion
+  R-ejecutar-accion
 end
 
-to T-guardar-posicion
+to R-guardar-posicion
   file-print (word ticks ";" who ";" pxcor ";"  pycor)
 end
 
-to T-pintar-parcela-actual
+to R-pintar-parcela-actual
   ask neighbors
   [
     set colorActual [color] of myself
-    set tiempoColor tiempoMaxColor
+    set tiempoColor tiempo-vida-marca
   ]
   ask patch-here
   [
     set colorActual [color] of myself
-    set tiempoColor tiempoMaxColor
+    set tiempoColor tiempo-vida-marca
   ]
 end
 
-to T-reevaluar-estado
+to R-reevaluar-estado
   if estado-actual = reposo
   [
     if peso > pesoInicial * (UmbralDesnutricion + UmbralRecuperacion)
@@ -178,26 +195,26 @@ to T-reevaluar-estado
   ]
 end
 
-to T-ejecutar-accion
+to R-ejecutar-accion
   if estado-actual = reposo
   [
     set peso peso + CostoMovPorTic
   ]
   if estado-actual = movimiento
   [
-   T-moverse
+   R-moverse
   ]
   if estado-actual = conflicto
   [
-    T-conflicto
+    R-conflicto
   ]
 end
 
-to T-subirPeso
+to R-subirPeso
   set peso peso + PesoPorDia
 end
 
-to T-moverse
+to R-moverse
   ;; netlogo es raro con los num psuedo aleatorios
   ;; si inicia con la semilla default siempre tira
   ;; los mismo valores
@@ -215,7 +232,7 @@ to T-moverse
     jump salto
 
     ;; Revisa que alguna de las tortugas en el radio de detección de amenaza, sea parte de la lista de amenazas.
-    let agentes-amenazaActuales (other turtles in-radius radioDeteccionAmenaza) with [T-en-lista [agentes-amenaza] of myself who]
+    let agentes-amenazaActuales (other ranas in-radius radioDeteccionAmenaza) with [R-en-lista [agentes-amenaza] of myself who]
     ifelse not can-move? salto or count agentes-amenazaActuales > 1
     [
       move-to patch-origen
@@ -224,12 +241,13 @@ to T-moverse
       set enSeleccion false
     ]
   ]
+    hatch-marcas 1 [ set color [color] of myself set edad 0 set size 2 ]
     set peso peso - CostoMovPorTic ;; TODO hacer constante o slider
-  T-revisar-amenazas
-  T-pintar-parcela-actual
+  R-revisar-amenazas
+  R-pintar-parcela-actual
 end
 
-to T-conflicto
+to R-conflicto
   let probContinue random-float 1
   ifelse probContinue > probConflictoContinue
   [
@@ -278,7 +296,7 @@ to T-conflicto
   ]
 end
 
-to T-revisar-amenazas
+to R-revisar-amenazas
   ;;******************************************************************************************
   ;; Muevo esto para otro método para que se ejecute luego de que las ranas se muevan, sino,
   ;; luego de cada conflicto siguen apareciendo las mismas amenazas
@@ -288,7 +306,7 @@ to T-revisar-amenazas
 
 
   ;;Lo siguiente revisa que la rana que se mueva, no está en la lista de amenaza de las ranas cercanas.
-    let posibles-agentes-conflicto (other turtles in-radius radioDeteccionConflicto) with [not T-en-lista [agentes-conflictos-previos] of myself who]
+    let posibles-agentes-conflicto (other ranas in-radius radioDeteccionConflicto) with [not R-en-lista [agentes-conflictos-previos] of myself who]
 
     ;;***************************************************************************************************
     ;; Y si la siguiente comparación la hacemos con un OR, en vez de un AND, para dejar la posibilidad de
@@ -318,7 +336,7 @@ to T-revisar-amenazas
 end
 
 
-to-report T-en-lista [lista a]
+to-report R-en-lista [lista a]
   let enLista? member? a lista
   report enLista?
 end
@@ -350,7 +368,7 @@ to P-update
       set tiempoColor -1
     ]
     [
-      set pcolor scale-color colorActual tiempoColor (4 * tiempoMaxColor) 0
+      set pcolor scale-color colorActual tiempoColor (4 * tiempo-vida-marca) 0
       set tiempoColor tiempoColor - 1
     ]
   ]
@@ -435,8 +453,8 @@ SLIDER
 131
 203
 164
-CantidadMachos
-CantidadMachos
+cantidad-ranas
+cantidad-ranas
 1
 14
 14
@@ -542,11 +560,11 @@ SLIDER
 616
 204
 649
-tiempoMaxColor
-tiempoMaxColor
+tiempo-vida-marca
+tiempo-vida-marca
 0
 100
-10
+15
 1
 1
 NIL
@@ -571,7 +589,7 @@ radioDeteccionAmenaza
 radioDeteccionAmenaza
 0
 100
-19
+41
 1
 1
 NIL
@@ -586,7 +604,7 @@ radioDeteccionConflicto
 radioDeteccionConflicto
 0
 100
-25
+41
 1
 1
 NIL
