@@ -622,7 +622,7 @@ tiempo-vida-marca
 tiempo-vida-marca
 0
 100
-15
+30
 1
 1
 NIL
@@ -639,15 +639,15 @@ Cantidad de tics para que la marca se borre, el color va desvaneciendo conforme 
 1
 
 SLIDER
-17
-446
-197
-479
+220
+242
+400
+275
 radioDeteccionConflicto
 radioDeteccionConflicto
 0
 100
-41
+10
 1
 1
 NIL
