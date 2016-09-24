@@ -18,6 +18,7 @@ to init-globals
 end
 
 
+
 ;;*******************************
 ;; setup:                       *
 ;;*******************************
@@ -107,6 +108,7 @@ end
 marcas-own
 [
   edad
+  who-padre
 ]
 
 ranas-own ;;
@@ -125,6 +127,8 @@ ranas-own ;;
 ]
 
 to R-init
+  set color who * 10 - 6
+
   ;; Tamaño segun documento "Apuntes lluvia ideas"
   set tamano random-float 1.76 + 23.04
 
@@ -142,6 +146,9 @@ to R-init
 
   set agentes-amenaza []
   set agentes-conflictos-previos []
+
+  set label (word who " " agentes-amenaza)
+  set label-color black
 end
 
 to R-comportamientoPrincipal
@@ -215,37 +222,86 @@ to R-subirPeso
 end
 
 to R-moverse
-  ;; netlogo es raro con los num psuedo aleatorios
-  ;; si inicia con la semilla default siempre tira
-  ;; los mismo valores
   random-seed new-seed
-  let enSeleccion true ; simular do.... while
-  while [enSeleccion = true]
+
+  let cantidad-secciones 8
+  let arco 360 / cantidad-secciones ;; para la detección en cono
+  let caminos-nuevos []
+  let caminos-conocidos []
+
+  repeat cantidad-secciones
   [
-    let patch-origen patch-here
-    facexy random-xcor random-ycor
+    let amenazas other ranas
+      with [R-en-lista [agentes-amenaza] of myself [who] of self]
+      in-cone movimiento-por-tic arco
 
-    ;; Agregué este random para que la rana no se tenga que mover siempre la misma cantidad de patches
-    ;; sino que puede moverse cualquier catidad de patches entre 0 y movimientosPorHora
-    ;; TODO: preguntar a los biólogos si quieren esto
-    let salto random movimientoPorHora
-    jump salto
-
-    ;; Revisa que alguna de las tortugas en el radio de detección de amenaza, sea parte de la lista de amenazas.
-    let agentes-amenazaActuales (other ranas in-radius radioDeteccionAmenaza) with [R-en-lista [agentes-amenaza] of myself who]
-    ifelse not can-move? salto or count agentes-amenazaActuales > 1
+    if not any? amenazas and can-move? movimiento-por-tic
     [
-      move-to patch-origen
+      let marcas-terreno marcas with [who-padre = [who] of myself]
+        in-cone movimiento-por-tic arco
+
+      ifelse any? marcas-terreno
+      [
+        set caminos-conocidos lput heading caminos-conocidos
+      ]
+      [
+        set caminos-nuevos lput heading caminos-nuevos
+      ]
+    ]
+    rt arco + ((random 60) - 30)
+  ]
+
+  ifelse empty? caminos-nuevos
+  [
+    if not empty? caminos-conocidos
+    [
+      let camino-elegido one-of caminos-conocidos
+      set heading camino-elegido
+      random-seed new-seed
+      jump random movimiento-por-tic
+    ]
+    ;; si no hay donde moverse no se mueva
+  ]
+  [
+    ifelse empty? caminos-conocidos
+    [
+      let camino-elegido one-of caminos-nuevos
+      set heading camino-elegido
     ]
     [
-      set enSeleccion false
+      random-seed new-seed
+      let p random-float 1
+      ifelse p < prob-exploracion
+      [
+        let camino-elegido one-of caminos-nuevos
+        set heading camino-elegido
+      ]
+      [
+        let camino-elegido one-of caminos-conocidos
+        set heading camino-elegido
+      ]
     ]
   ]
-    hatch-marcas 1 [ set color [color] of myself set edad 0 set size 2 ]
-    set peso peso - CostoMovPorTic ;; TODO hacer constante o slider
-  R-revisar-amenazas
+
+
+  jump movimiento-por-tic
+
   R-pintar-parcela-actual
+  R-dejar-marca
+
+  R-revisar-amenazas
 end
+
+to R-dejar-marca
+  hatch-marcas 1 [
+    set color [color] of myself
+    set edad 0
+    set size 5
+    set who-padre [who] of myself
+    set label ""
+  ]
+end
+
 
 to R-conflicto
   let probContinue random-float 1
@@ -266,6 +322,7 @@ to R-conflicto
       [
         set agentes-conflictos-previos lput [who] of myself agentes-conflictos-previos
         set agentes-amenaza lput [who] of myself agentes-amenaza
+        set label (word who " " agentes-amenaza)
         print agentes-amenaza
       ]
     ]
@@ -281,6 +338,7 @@ to R-conflicto
       ]
       ;; Se le pide a la rana que perdió que almacene el id de la rana ganadora
       set agentes-amenaza lput [who] of otro-en-conflicto agentes-amenaza
+      set label (word who " " agentes-amenaza)
       print agentes-amenaza
     ]
     ;; TODO: esto hay que reepensarlo luego de que implementemos los "castigos"
@@ -388,15 +446,15 @@ to L-init ;; Para inicializar un link o conexión a la vez.
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
+425
 10
-773
-594
+1126
+732
 230
 230
-1.2
+1.5
 1
-10
+14
 1
 1
 1
@@ -449,10 +507,10 @@ NIL
 1
 
 SLIDER
-31
-131
-203
-164
+227
+101
+399
+134
 cantidad-ranas
 cantidad-ranas
 1
@@ -541,70 +599,55 @@ NIL
 HORIZONTAL
 
 SLIDER
-31
-354
-203
-387
-movimientoPorHora
-movimientoPorHora
+228
+146
+400
+179
+movimiento-por-tic
+movimiento-por-tic
 0
 200
-17
+10
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-32
-616
-204
-649
+227
+56
+399
+89
 tiempo-vida-marca
 tiempo-vida-marca
 0
 100
-15
+30
 1
 1
 NIL
 HORIZONTAL
 
 TEXTBOX
-54
-551
-204
-607
+227
+10
+428
+66
 Cantidad de tics para que la marca se borre, el color va desvaneciendo conforme los tics
 11
 0.0
 1
 
 SLIDER
-16
-484
-198
-517
-radioDeteccionAmenaza
-radioDeteccionAmenaza
-0
-100
-41
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-17
-446
-197
-479
+220
+242
+400
+275
 radioDeteccionConflicto
 radioDeteccionConflicto
 0
 100
-41
+10
 1
 1
 NIL
@@ -631,7 +674,7 @@ INPUTBOX
 109
 79
 ticsMax
-100
+1000
 1
 0
 String
@@ -647,6 +690,21 @@ probConflictoContinue
 1
 0.1
 1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+228
+198
+400
+231
+prob-exploracion
+prob-exploracion
+0
+1
+0.72
+0.01
 1
 NIL
 HORIZONTAL
