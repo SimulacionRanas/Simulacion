@@ -257,7 +257,8 @@ to R-moverse
     [
       let camino-elegido one-of caminos-conocidos
       set heading camino-elegido
-      jump movimiento-por-tic
+      random-seed new-seed
+      jump random movimiento-por-tic
     ]
     ;; si no hay donde moverse no se mueva
   ]
@@ -606,7 +607,7 @@ movimiento-por-tic
 movimiento-por-tic
 0
 200
-15
+10
 1
 1
 NIL
