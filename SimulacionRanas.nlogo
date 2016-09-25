@@ -304,9 +304,14 @@ end
 
 
 to R-conflicto
+  ;;Lo pongo antes de que se decida el resultado del conflicto porque me parece que, en caso de que el conflicto dura más de un tick
+  ;;debería perderse más peso que si sólo dura un tick.
+  set peso peso - perdida-peso-conflicto
+    ask otro-en-conflicto [set peso peso - perdida-peso-conflicto]
   let probContinue random-float 1
   ifelse probContinue > probConflictoContinue
   [
+
     ;;Se define el ganador con una probabilidad basada en el peso de la rana
     let sumaPesos peso +  [peso] of otro-en-conflicto
     let probGana random sumaPesos
@@ -547,7 +552,7 @@ PesoPorDia
 PesoPorDia
 0
 100
-10
+8
 1
 1
 NIL
@@ -622,7 +627,7 @@ tiempo-vida-marca
 tiempo-vida-marca
 0
 100
-30
+20
 1
 1
 NIL
@@ -662,7 +667,7 @@ probConflicto
 probConflicto
 0
 1
-0.115
+0.363
 0.001
 1
 NIL
@@ -705,6 +710,21 @@ prob-exploracion
 1
 0.72
 0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+235
+290
+408
+323
+Perdida-peso-conflicto
+Perdida-peso-conflicto
+0
+100
+10
+1
 1
 NIL
 HORIZONTAL
