@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import numpy as np, matplotlib.pyplot as plt, pylab as p, time, sys
 from scipy.spatial import ConvexHull
 
@@ -31,7 +34,7 @@ def get_intervals(inter):
     i = 0
     for m in set_m:
         abc = m[np.argsort(m[:,1])]
-        abc = np.vsplit(abc,  cant_ranas)
+        abc = np.vsplit(abc, cant_ranas)
 
         new_abc = np.zeros((len(abc), 1), dtype=object)
         j = 0
@@ -56,19 +59,28 @@ def poly_area(x, y):
     return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))
              
 def process_interval(i):
-    process_snap(i.agents[0])
-      
+    for agent in i[0].agents:
+        process_snap(agent)
+
 def process_snap(s):
     points = s.points
     hull = ConvexHull(points)
+    
+    # descomentar para graficar
+    # TODO: hacerlo más fancy
     plt.plot(points[:,0], points[:,1], 'o')
     for simplex in hull.simplices:
         plt.plot(points[simplex, 0], points[simplex, 1], 'k-')
-    plt.show()
     s.area = poly_area(points[hull.vertices, 0], points[hull.vertices, 1])
-    #print(area)
+    print(s.area)
 
 if __name__ == "__main__":
     inter = sys.argv[1]
     intervals = get_intervals(inter)
-    process_interval(intervals[0,0])
+
+    c = 0
+    for interval in intervals:
+        plt.figure(c)
+        process_interval(interval)
+        c = c + 1
+    plt.show()
