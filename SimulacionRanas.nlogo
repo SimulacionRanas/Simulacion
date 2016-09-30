@@ -67,10 +67,7 @@ to go
   ;; 1 tic es 1 hora
   ;; se les aumenta el peso cada 10 horas
   if ticks mod 10 = 0
-  [
-    ask ranas [R-subirPeso]
-  ]
-
+  [ ask ranas [R-subirPeso] ]
   ask marcas
   [
     if edad = tiempo-vida-marca [ die ]
@@ -134,6 +131,7 @@ to R-init
 
   ;; Función de Condición que está en el documento "Apuntes luvia ideas"
   set peso -0.795 + (0.779 * tamano)
+  set pesoInicial peso
 
   ;; Función de frecuencia en documento "Apuntes lluvia idea"
   set frecuenciaCanto (-3760 * peso) + 3316
@@ -195,17 +193,22 @@ to R-reevaluar-estado
   ]
   if estado-actual = movimiento
   [
-   if peso <= pesoInicial * UmbralDesnutricion
+   ifelse peso <= pesoInicial * UmbralDesnutricion
     [
       set estado-actual reposo
     ]
+    [
+      set peso peso - (peso * ( CostoMovPorTic / 100 ) )
+
+    ]
+
   ]
 end
 
 to R-ejecutar-accion
   if estado-actual = reposo
   [
-    set peso peso + CostoMovPorTic
+    ;; set peso peso + CostoMovPorTic
   ]
   if estado-actual = movimiento
   [
@@ -217,8 +220,9 @@ to R-ejecutar-accion
   ]
 end
 
-to R-subirPeso
-  set peso peso + PesoPorDia
+to R-subirPeso ;;Correo del 23 de Julio => Aumen de peso por hora entre 0 y 3.6% de la masa inicial. Se límite superior se deja como un parámetro slider.
+  let aumentoPeso  pesoInicial * ((Random-float ProbPesoPorHora) / 100)
+  set peso peso + 24 * aumentoPeso
 end
 
 to R-moverse
@@ -294,6 +298,7 @@ end
 
 to R-dejar-marca
   hatch-marcas 1 [
+    ask other marcas-here[die]
     set color [color] of myself
     set edad 0
     set size 5
@@ -306,8 +311,11 @@ end
 to R-conflicto
   ;;Lo pongo antes de que se decida el resultado del conflicto porque me parece que, en caso de que el conflicto dura más de un tick
   ;;debería perderse más peso que si sólo dura un tick.
-  set peso peso - perdida-peso-conflicto
-    ask otro-en-conflicto [set peso peso - perdida-peso-conflicto]
+  let pesoPerdido pesoInicial * (CostoMovPorTic / 100)
+  set pesoPerdido pesoPerdido + 2
+  set peso peso - pesoPerdido
+
+    ask otro-en-conflicto [set peso peso - [pesoPerdido] of myself]
   let probContinue random-float 1
   ifelse probContinue > probConflictoContinue
   [
@@ -548,12 +556,12 @@ SLIDER
 201
 203
 234
-PesoPorDia
-PesoPorDia
+ProbPesoPorHora
+ProbPesoPorHora
 0
-100
-8
-1
+10
+3.5
+0.1
 1
 NIL
 HORIZONTAL
@@ -597,8 +605,8 @@ CostoMovPorTic
 CostoMovPorTic
 0
 20
-2
-1
+2.8
+0.1
 1
 NIL
 HORIZONTAL
@@ -627,7 +635,7 @@ tiempo-vida-marca
 tiempo-vida-marca
 0
 100
-20
+50
 1
 1
 NIL
@@ -652,7 +660,7 @@ radioDeteccionConflicto
 radioDeteccionConflicto
 0
 100
-10
+20
 1
 1
 NIL
@@ -667,7 +675,7 @@ probConflicto
 probConflicto
 0
 1
-0.363
+0.573
 0.001
 1
 NIL
@@ -723,7 +731,7 @@ Perdida-peso-conflicto
 Perdida-peso-conflicto
 0
 100
-10
+15
 1
 1
 NIL
