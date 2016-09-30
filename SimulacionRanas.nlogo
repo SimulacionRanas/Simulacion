@@ -311,8 +311,8 @@ end
 to R-conflicto
   ;;Lo pongo antes de que se decida el resultado del conflicto porque me parece que, en caso de que el conflicto dura más de un tick
   ;;debería perderse más peso que si sólo dura un tick.
-  let pesoPerdido pesoInicial * (CostoMovPorTic / 100)
-  set pesoPerdido pesoPerdido + 2
+  let pesoPerdido 2 * CostoMovPorTic + Random-float CostoMovPorTic
+  set pesoPerdido peso * (pesoPerdido / 100)
   set peso peso - pesoPerdido
 
     ask otro-en-conflicto [set peso peso - [pesoPerdido] of myself]
