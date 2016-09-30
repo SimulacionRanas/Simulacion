@@ -660,7 +660,7 @@ radioDeteccionConflicto
 radioDeteccionConflicto
 0
 100
-20
+26
 1
 1
 NIL
@@ -722,20 +722,42 @@ prob-exploracion
 NIL
 HORIZONTAL
 
-SLIDER
-235
-290
-408
-323
-Perdida-peso-conflicto
-Perdida-peso-conflicto
-0
-100
-15
-1
-1
-NIL
-HORIZONTAL
+PLOT
+214
+339
+414
+489
+Peso promedio de las ranas
+Tics
+Peso Promedio
+0.0
+1000.0
+0.0
+35.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mean [peso] of ranas"
+
+PLOT
+18
+571
+218
+721
+Peso máximo y mínimo de las Ranas
+Tics
+Peso
+0.0
+1000.0
+0.0
+35.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -14070903 true "" "plot max [peso] of ranas"
+"pen-1" 1.0 0 -12087248 true "" "plot min [peso] of ranas"
 
 @#$#@#$#@
 ## ¿DE QUÉ SE TRATA?
