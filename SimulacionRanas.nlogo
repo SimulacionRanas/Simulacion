@@ -222,7 +222,8 @@ end
 
 to R-subirPeso ;;Correo del 23 de Julio => Aumen de peso por hora entre 0 y 3.6% de la masa inicial. Se límite superior se deja como un parámetro slider.
   let aumentoPeso  pesoInicial * ((Random-float ProbPesoPorHora) / 100)
-  set peso peso + 24 * aumentoPeso
+  set peso peso + (10 * aumentoPeso)
+  print (aumentoPeso * 10)
 end
 
 to R-moverse
@@ -605,7 +606,7 @@ CostoMovPorTic
 CostoMovPorTic
 0
 20
-2.8
+1.5
 0.1
 1
 NIL
