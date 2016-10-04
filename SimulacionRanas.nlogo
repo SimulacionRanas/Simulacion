@@ -67,10 +67,7 @@ to go
   ;; 1 tic es 1 hora
   ;; se les aumenta el peso cada 10 horas
   if ticks mod 10 = 0
-  [
-    ask ranas [R-subirPeso]
-  ]
-
+  [ ask ranas [R-subirPeso] ]
   ask marcas
   [
     if edad = tiempo-vida-marca [ die ]
@@ -134,6 +131,7 @@ to R-init
 
   ;; Función de Condición que está en el documento "Apuntes luvia ideas"
   set peso -0.795 + (0.779 * tamano)
+  set pesoInicial peso
 
   ;; Función de frecuencia en documento "Apuntes lluvia idea"
   set frecuenciaCanto (-3760 * peso) + 3316
@@ -195,17 +193,22 @@ to R-reevaluar-estado
   ]
   if estado-actual = movimiento
   [
-   if peso <= pesoInicial * UmbralDesnutricion
+   ifelse peso <= pesoInicial * UmbralDesnutricion
     [
       set estado-actual reposo
     ]
+    [
+      set peso peso - (peso * ( CostoMovPorTic / 100 ) )
+
+    ]
+
   ]
 end
 
 to R-ejecutar-accion
   if estado-actual = reposo
   [
-    set peso peso + CostoMovPorTic
+    ;; set peso peso + CostoMovPorTic
   ]
   if estado-actual = movimiento
   [
@@ -217,8 +220,10 @@ to R-ejecutar-accion
   ]
 end
 
-to R-subirPeso
-  set peso peso + PesoPorDia
+to R-subirPeso ;;Correo del 23 de Julio => Aumen de peso por hora entre 0 y 3.6% de la masa inicial. Se límite superior se deja como un parámetro slider.
+  let aumentoPeso  pesoInicial * ((Random-float ProbPesoPorHora) / 100)
+  set peso peso + (10 * aumentoPeso)
+  print (aumentoPeso * 10)
 end
 
 to R-moverse
@@ -294,6 +299,7 @@ end
 
 to R-dejar-marca
   hatch-marcas 1 [
+    ask other marcas-here[die]
     set color [color] of myself
     set edad 0
     set size 5
@@ -304,9 +310,17 @@ end
 
 
 to R-conflicto
+  ;;Lo pongo antes de que se decida el resultado del conflicto porque me parece que, en caso de que el conflicto dura más de un tick
+  ;;debería perderse más peso que si sólo dura un tick.
+  let pesoPerdido 2 * CostoMovPorTic + Random-float CostoMovPorTic
+  set pesoPerdido peso * (pesoPerdido / 100)
+  set peso peso - pesoPerdido
+
+    ask otro-en-conflicto [set peso peso - [pesoPerdido] of myself]
   let probContinue random-float 1
   ifelse probContinue > probConflictoContinue
   [
+
     ;;Se define el ganador con una probabilidad basada en el peso de la rana
     let sumaPesos peso +  [peso] of otro-en-conflicto
     let probGana random sumaPesos
@@ -543,12 +557,12 @@ SLIDER
 201
 203
 234
-PesoPorDia
-PesoPorDia
+ProbPesoPorHora
+ProbPesoPorHora
 0
-100
 10
-1
+3.5
+0.1
 1
 NIL
 HORIZONTAL
@@ -592,8 +606,8 @@ CostoMovPorTic
 CostoMovPorTic
 0
 20
-2
-1
+1.5
+0.1
 1
 NIL
 HORIZONTAL
@@ -622,7 +636,7 @@ tiempo-vida-marca
 tiempo-vida-marca
 0
 100
-30
+50
 1
 1
 NIL
@@ -647,7 +661,7 @@ radioDeteccionConflicto
 radioDeteccionConflicto
 0
 100
-10
+26
 1
 1
 NIL
@@ -662,7 +676,7 @@ probConflicto
 probConflicto
 0
 1
-0.115
+0.573
 0.001
 1
 NIL
@@ -708,6 +722,43 @@ prob-exploracion
 1
 NIL
 HORIZONTAL
+
+PLOT
+214
+339
+414
+489
+Peso promedio de las ranas
+Tics
+Peso Promedio
+0.0
+1000.0
+0.0
+35.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mean [peso] of ranas"
+
+PLOT
+18
+571
+218
+721
+Peso máximo y mínimo de las Ranas
+Tics
+Peso
+0.0
+1000.0
+0.0
+35.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -14070903 true "" "plot max [peso] of ranas"
+"pen-1" 1.0 0 -12087248 true "" "plot min [peso] of ranas"
 
 @#$#@#$#@
 ## ¿DE QUÉ SE TRATA?

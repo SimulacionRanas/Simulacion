@@ -1,116 +1,113 @@
-import numpy as n, matplotlib.pyplot as plt, pylab as p, time
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-# http://scipy.github.io/devdocs/generated/scipy.spatial.ConvexHull.html
+import numpy as np, matplotlib.pyplot as plt, pylab as p, time, sys
+from scipy.spatial import ConvexHull
+from scipy.stats import pearsonr
 
-def get_points():
+class snapshot:
+    def __init__(self):
+        self.interval = 0
+        self.id = 0
+        self.points = 0
+        self.area = 0
+        self.peso = 0
+        self.peso_prom = 0
+        self.hull = 0
+
+class interval:
+    def __init__(self):
+        self.id = 0
+        self.agents = 0
+
+def get_intervals(inter):
     # extraigo del csv las marcas
-    m = n.loadtxt(open("salida-movimientos.csv","rb"),delimiter=";",skiprows=0)
+    m = np.loadtxt(open("salida-movimientos.csv","rb"),delimiter=";",skiprows=0)
 
-    # busco el ultimo tic y el la cantidad de ranas
-    max_tic = m[:,0].max()
-    max_id = m[:,1].max()
-    
-    ultimos_tics = 10
-    
-    a = int( (max_id + 1) * (max_tic - ultimos_tics - 1) ) - 1
-    
-    # extraigo las ultimas 10 marcas de cada rana
-    m = m[a:-1,:]
-    
-    # ordeno por id de rana
-    m = m[n.argsort(m[:,1])]
-    
-    m = m[:, [2,3]]
-    
-    conjuntos = n.split(m, ultimos_tics)
-    
-    return conjuntos[0]
+    # busco la cantidad de ranas y el ultimo tic
+    # sumo 1 por el index empieza en 0
+    cant_ranas = m[:,1].max() + 1
+    max_tic = m[:, 0].max() + 1
 
+    # divido el csv por la cantidad de intervalos
+    # notese que el csv ya está ordenado por tics
+    matrix_by_intervals = np.vsplit(m, int(inter))
 
+    # vector vacío para devolver los intervalos
+    intervals = np.zeros(len(matrix_by_intervals), dtype=object)
 
-def _angle_to_point(point, centre):
-    '''calculate angle in 2-D between points and x axis'''
-    delta = point - centre
-    res = n.arctan(delta[1] / delta[0])
-    if delta[0] < 0:
-        res += n.pi
-    return res
+    i = 0
+    for m in matrix_by_intervals:
+        # ordeno el intervalo por id de agente
+        interval_by_agents = m[np.argsort(m[:,1])]
+        
+        # divido por la cantidad de agentes
+        interval_by_agents = np.vsplit(interval_by_agents, cant_ranas)
 
+        # vector vacío para ir procesando agentes de un intervalo
+        agents_interval = np.zeros(len(interval_by_agents), dtype=object)
+        j = 0
+        
+        # proceso cada agente en un objeto snapshot
+        for a in interval_by_agents:
+            s = snapshot()
+            s.interval = i
+            s.id = int(a[0, 1])
+            s.peso = a[np.argsort(a[:,0])][-1, 4]
+            s.peso_prom = np.average(a[:, 4])
+            s.points = a[:, [2,3]]
+            agents_interval[j] = s
+            j = j + 1
 
-def _draw_triangle(p1, p2, p3, **kwargs):
-    tmp = n.vstack((p1,p2,p3))
-    x,y = [x[0] for x in zip(tmp.transpose())]
-    p.fill(x,y, **kwargs)
-    #time.sleep(0.2)
+        inter = interval()
+        inter.id = i
+        inter.agents = agents_interval[:]
+        intervals[i] = inter
+        i = i + 1    
+    return intervals
 
+def poly_area(x, y):
+    return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))
+             
+def process_interval(i):
+    for agent in i.agents:
+        agent = process_snap(agent)
+        
+def process_snap(s):
+    points = s.points
+    hull = ConvexHull(points)
+    s.hull = hull
+    s.area = poly_area(points[hull.vertices, 0], points[hull.vertices, 1])
+    return s
 
-def area_of_triangle(p1, p2, p3):
-    '''calculate area of any triangle given co-ordinates of the corners'''
-    return n.linalg.norm(n.cross((p2 - p1), (p3 - p1)))/2.
-
-
-def convex_hull(points, graphic=True, smidgen=0.0075):
-    '''Calculate subset of points that make a convex hull around points
-
-Recursively eliminates points that lie inside two neighbouring points until only convex hull is remaining.
-
-:Parameters:
-    points : ndarray (2 x m)
-        array of points for which to find hull
-    graphic : bool
-        use pylab to show progress?
-    smidgen : float
-        offset for graphic number labels - useful values depend on your data range
-
-:Returns:
-    hull_points : ndarray (2 x n)
-        convex hull surrounding points
-'''
-    if graphic:
-        p.show()
-        p.clf()
-        plt.plot(points[0], points[1], 'ro')
-    n_pts = points.shape[1]
-    assert(n_pts > 5)
-    centre = points.mean(1)
-    if graphic: plt.plot((centre[0],),(centre[1],),'bo')
-    angles = n.apply_along_axis(_angle_to_point, 0, points, centre)
-    pts_ord = points[:,angles.argsort()]
-    if graphic:
-        for i in xrange(n_pts):
-            p.text(pts_ord[0,i] + smidgen, pts_ord[1,i] + smidgen, \
-                   '%d' % i)
-    pts = [x[0] for x in zip(pts_ord.transpose())]
-    prev_pts = len(pts) + 1
-    k = 0
-    while prev_pts > n_pts:
-        prev_pts = n_pts
-        n_pts = len(pts)
-        if graphic: p.gca().patches = []
-        i = -2
-        while i < (n_pts - 2):
-            Aij = area_of_triangle(centre, pts[i],     pts[(i + 1) % n_pts])
-            Ajk = area_of_triangle(centre, pts[(i + 1) % n_pts], \
-                                   pts[(i + 2) % n_pts])
-            Aik = area_of_triangle(centre, pts[i],     pts[(i + 2) % n_pts])
-            if graphic:
-                _draw_triangle(centre, pts[i], pts[(i + 1) % n_pts], \
-                               facecolor='blue', alpha = 0.2)
-                _draw_triangle(centre, pts[(i + 1) % n_pts], \
-                               pts[(i + 2) % n_pts], \
-                               facecolor='green', alpha = 0.2)
-                _draw_triangle(centre, pts[i], pts[(i + 2) % n_pts], \
-                               facecolor='red', alpha = 0.2)
-            if Aij + Ajk < Aik:
-                if graphic: plt.plot((pts[i + 1][0],),(pts[i + 1][1],),'go')
-                del pts[i+1]
-            i += 1
-            n_pts = len(pts)
-        k += 1
-    p.show()
-    return n.asarray(pts)
+def plot_intervals(i):
+    for interval in i:
+        plt.figure(interval.id)
+        for agent in interval.agents:
+            points = agent.points
+            hull = agent.hull
+            plt.plot(points[:,0], points[:,1], 'o')
+            for simplex in hull.simplices:
+                plt.plot(points[simplex, 0], points[simplex, 1], 'k-')
+    plt.show()
 
 if __name__ == "__main__":
-    points = get_points().transpose()
-    hull_pts = convex_hull(points)
-    print(hull_pts)
+    inter = sys.argv[1]
+    intervals = get_intervals(inter)
+
+    c = 0
+    for interval in intervals:
+        process_interval(interval)
+
+    for i in intervals:
+        l = len(i.agents)
+        area = np.zeros(l)
+        peso = np.zeros(l)
+        for x in range(0, l):
+            area[x] = i.agents[x].area
+            peso[x] = i.agents[x].peso_prom
+        #print(peso, area)
+        p = pearsonr(peso, area)
+        print("Pearson iter#" + str(i.id) + " peso_prom, area: " +  str(p))
+    
+    #plot_intervals(intervals)
