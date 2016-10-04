@@ -3,6 +3,7 @@
 
 import numpy as np, matplotlib.pyplot as plt, pylab as p, time, sys
 from scipy.spatial import ConvexHull
+from scipy.stats import pearsonr
 
 class snapshot:
     def __init__(self):
@@ -71,9 +72,7 @@ def poly_area(x, y):
 def process_interval(i):
     for agent in i.agents:
         agent = process_snap(agent)
-        print(agent.interval, agent.id, agent.area, agent.peso, agent.peso_prom)
-        #plot_snap(agent)
-
+        
 def process_snap(s):
     points = s.points
     hull = ConvexHull(points)
@@ -81,12 +80,16 @@ def process_snap(s):
     s.area = poly_area(points[hull.vertices, 0], points[hull.vertices, 1])
     return s
 
-def plot_snap(s):
-    points = s.points
-    hull = s.hull
-    plt.plot(points[:,0], points[:,1], 'o')
-    for simplex in hull.simplices:
-        plt.plot(points[simplex, 0], points[simplex, 1], 'k-')
+def plot_intervals(i):
+    for interval in i:
+        plt.figure(interval.id)
+        for agent in interval.agents:
+            points = agent.points
+            hull = agent.hull
+            plt.plot(points[:,0], points[:,1], 'o')
+            for simplex in hull.simplices:
+                plt.plot(points[simplex, 0], points[simplex, 1], 'k-')
+    plt.show()
 
 if __name__ == "__main__":
     inter = sys.argv[1]
@@ -94,7 +97,19 @@ if __name__ == "__main__":
 
     c = 0
     for interval in intervals:
-        #plt.figure(c)
         process_interval(interval)
-        c = c + 1
-    #plt.show()
+
+    area = np.zeros(len(intervals))
+    peso = np.zeros(len(intervals))
+    c = 0
+
+    for x in range(0, len(intervals[0].agents)):
+        c = 0
+        for i in intervals:
+            area[c] = i.agents[x].area
+            peso[c] = i.agents[x].peso_prom
+            #print(i.agents[x].interval, i.agents[x].id, i.agents[x].area, i.agents[x].peso, i.agents[x].peso_prom)
+            c = c + 1
+        p = pearsonr(peso, area)
+        print("Pearson rana # " + str(x) + " peso_prom, area: " +  str(p))
+        #plot_intervals(intervals)
