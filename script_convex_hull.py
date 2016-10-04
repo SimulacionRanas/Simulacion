@@ -99,17 +99,15 @@ if __name__ == "__main__":
     for interval in intervals:
         process_interval(interval)
 
-    area = np.zeros(len(intervals))
-    peso = np.zeros(len(intervals))
-    c = 0
-
-    for x in range(0, len(intervals[0].agents)):
-        c = 0
-        for i in intervals:
-            area[c] = i.agents[x].area
-            peso[c] = i.agents[x].peso_prom
-            #print(i.agents[x].interval, i.agents[x].id, i.agents[x].area, i.agents[x].peso, i.agents[x].peso_prom)
-            c = c + 1
+    for i in intervals:
+        l = len(i.agents)
+        area = np.zeros(l)
+        peso = np.zeros(l)
+        for x in range(0, l):
+            area[x] = i.agents[x].area
+            peso[x] = i.agents[x].peso_prom
+        #print(peso, area)
         p = pearsonr(peso, area)
-        print("Pearson rana # " + str(x) + " peso_prom, area: " +  str(p))
-        #plot_intervals(intervals)
+        print("Pearson iter#" + str(i.id) + " peso_prom, area: " +  str(p))
+    
+    #plot_intervals(intervals)
