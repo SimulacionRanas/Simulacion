@@ -127,6 +127,7 @@ to R-init
   set color who * 10 - 6
 
   ;; Tamaño segun documento "Apuntes lluvia ideas"
+  random-seed new-seed
   set tamano random-float 1.76 + 23.04
 
   ;; Función de Condición que está en el documento "Apuntes luvia ideas"
@@ -221,6 +222,7 @@ to R-ejecutar-accion
 end
 
 to R-subirPeso ;;Correo del 23 de Julio => Aumen de peso por hora entre 0 y 3.6% de la masa inicial. Se límite superior se deja como un parámetro slider.
+  random-seed new-seed
   let aumentoPeso  pesoInicial * ((Random-float ProbPesoPorHora) / 100)
   set peso peso + (10 * aumentoPeso)
   print (aumentoPeso * 10)
@@ -312,6 +314,7 @@ end
 to R-conflicto
   ;;Lo pongo antes de que se decida el resultado del conflicto porque me parece que, en caso de que el conflicto dura más de un tick
   ;;debería perderse más peso que si sólo dura un tick.
+  random-seed new-seed
   let pesoPerdido 2 * CostoMovPorTic + Random-float CostoMovPorTic
   set pesoPerdido peso * (pesoPerdido / 100)
   set peso peso - pesoPerdido
