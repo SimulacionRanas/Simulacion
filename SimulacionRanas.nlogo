@@ -56,7 +56,6 @@ to setup
     file-delete "salida-movimientos.csv"
   ]
   file-open "salida-movimientos.csv"
-  reset-ticks
 end
 
 ;;*******************************
@@ -72,7 +71,19 @@ to go
   [
     if edad = tiempo-vida-marca [ die ]
     set edad edad + 1
-
+  ]
+  if ticks mod 20 = 0
+  [
+    file-write ticks
+    file-write ", Peso Promedio:"
+    file-write  mean [peso] of ranas
+    file-write ", Desviación estandar: "
+    file-write standard-deviation [peso] of ranas
+    file-write "Peso máximo: "
+    file-write max [peso] of ranas
+    file-write "Peso mínimo: "
+    file-write min [peso] of ranas
+    file-print ""
   ]
 
   ;; llama al metodo principal de cada rana
@@ -762,6 +773,24 @@ false
 PENS
 "default" 1.0 0 -14070903 true "" "plot max [peso] of ranas"
 "pen-1" 1.0 0 -12087248 true "" "plot min [peso] of ranas"
+
+PLOT
+259
+536
+459
+686
+Desviación standar del peso
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot standard-deviation [peso] of ranas"
 
 @#$#@#$#@
 ## ¿DE QUÉ SE TRATA?
