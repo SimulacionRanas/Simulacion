@@ -56,6 +56,7 @@ to setup
     file-delete "salida-movimientos.csv"
   ]
   file-open "salida-movimientos.csv"
+  reset-ticks
 end
 
 ;;*******************************
@@ -142,7 +143,7 @@ to R-init
   set tamano random-float 1.76 + 23.04
 
   ;; Función de Condición que está en el documento "Apuntes luvia ideas"
-  set peso -0.795 + (0.779 * tamano)
+  set peso 0.05 + random-float 0.07
   set pesoInicial peso
 
   ;; Función de frecuencia en documento "Apuntes lluvia idea"
@@ -620,7 +621,7 @@ CostoMovPorTic
 CostoMovPorTic
 0
 20
-1.5
+1.7
 0.1
 1
 NIL
@@ -748,7 +749,7 @@ Peso Promedio
 0.0
 1000.0
 0.0
-35.0
+0.1
 true
 false
 "" ""
@@ -766,7 +767,7 @@ Peso
 0.0
 1000.0
 0.0
-35.0
+0.1
 true
 false
 "" ""
@@ -785,7 +786,7 @@ NIL
 0.0
 10.0
 0.0
-10.0
+0.1
 true
 false
 "" ""
