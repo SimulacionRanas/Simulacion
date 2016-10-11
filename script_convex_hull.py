@@ -66,7 +66,6 @@ def get_intervals(inter):
         i = i + 1    
     return intervals
 
-"""
 def poly_area(x, y):
     n = len(x)
     area = 0.0
@@ -76,13 +75,6 @@ def poly_area(x, y):
         area -= x[j] * y[i]
     area = abs(area) / 2.0
     return area
-
-"""
-
-def poly_area(x, y):
-    #print(x, y)
-    return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))
-
           
 def process_interval(i):
     for agent in i.agents:
