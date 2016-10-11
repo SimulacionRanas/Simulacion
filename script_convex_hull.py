@@ -55,20 +55,27 @@ def get_intervals(inter):
             s.id = int(a[0, 1])
             s.peso = a[np.argsort(a[:,0])][-1, 4]
             s.peso_prom = np.average(a[:, 4])
-            s.points = a[:, [2,3]]
+            s.points = a[:, [2,3]].astype(int)
             agents_interval[j] = s
             j = j + 1
 
         inter = interval()
         inter.id = i
-        inter.agents = agents_interval[:]
+        inter.agents = agents_interval
         intervals[i] = inter
         i = i + 1    
     return intervals
 
 def poly_area(x, y):
-    return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))
-             
+    n = len(x)
+    area = 0.0
+    for i in range(n):
+        j = (i + 1) % n
+        area += x[i] * y[j]
+        area -= x[j] * y[i]
+    area = abs(area) / 2.0
+    return area
+          
 def process_interval(i):
     for agent in i.agents:
         agent = process_snap(agent)
@@ -100,14 +107,20 @@ if __name__ == "__main__":
         process_interval(interval)
 
     for i in intervals:
+        print("Momento #" + str(i.id))
         l = len(i.agents)
         area = np.zeros(l)
         peso = np.zeros(l)
+        
         for x in range(0, l):
             area[x] = i.agents[x].area
             peso[x] = i.agents[x].peso_prom
-        #print(peso, area)
+            print("Rana #" + str(x) + " Peso prom: " + str(peso[x])  + " Area: " + str(area[x]))
         p = pearsonr(peso, area)
-        print("Pearson iter#" + str(i.id) + " peso_prom, area: " +  str(p))
-    
+        
+        #plt.figure(i.id)
+        #plt.scatter(area, peso)
+
+        print("Coeficiente corr iter#" + str(i.id) + " peso_prom, area: " +  str(p) + "\n")
+    #plt.show() 
     #plot_intervals(intervals)
