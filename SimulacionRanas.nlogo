@@ -640,7 +640,7 @@ tiempo-vida-marca
 tiempo-vida-marca
 0
 100
-20
+13
 1
 1
 NIL

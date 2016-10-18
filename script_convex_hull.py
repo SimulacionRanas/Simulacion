@@ -11,7 +11,6 @@ class snapshot:
         self.id = 0
         self.points = 0
         self.area = 0
-        self.peso = 0
         self.peso_prom = 0
         self.hull = 0
 
@@ -53,7 +52,6 @@ def get_intervals(inter):
             s = snapshot()
             s.interval = i
             s.id = int(a[0, 1])
-            s.peso = a[np.argsort(a[:,0])][-1, 4]
             s.peso_prom = np.average(a[:, 4])
             s.points = a[:, [2,3]].astype(int)
             agents_interval[j] = s
@@ -103,6 +101,7 @@ if __name__ == "__main__":
     intervals = get_intervals(inter)
 
     c = 0
+    coeficientes = []
     for interval in intervals:
         process_interval(interval)
 
@@ -115,12 +114,15 @@ if __name__ == "__main__":
         for x in range(0, l):
             area[x] = i.agents[x].area
             peso[x] = i.agents[x].peso_prom
-            print("Rana #" + str(x) + " Peso prom: " + str(peso[x])  + " Area: " + str(area[x]))
+            print("Rana #" + str(x) + " Condición: " + str(peso[x])  + " Area: " + str(area[x]) + "dm² " + "(" + str(area[x]/10) + "m²)" )
         p = pearsonr(peso, area)
-        
+        coeficientes.append([i.id, p[0]])
         #plt.figure(i.id)
         #plt.scatter(area, peso)
 
-        print("Coeficiente corr iter#" + str(i.id) + " peso_prom, area: " +  str(p) + "\n")
-    #plt.show() 
+        print("Coeficiente corr iter#" + str(i.id) + " condición, área: " +  str(p[0]) + "\n")
+    plt.plot(*zip(*coeficientes), marker='o', color='r', ls='')
+    plt.figure(2)
+    plt.plot(*zip(*coeficientes))
+    plt.show() 
     #plot_intervals(intervals)
