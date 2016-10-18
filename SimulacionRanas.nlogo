@@ -140,10 +140,10 @@ to R-init
 
   ;; Tamaño segun documento "Apuntes lluvia ideas"
   random-seed new-seed
-  set tamano random-float 1.76 + 23.04
+  set tamano random-normal 23.92 0.88
 
   ;; Función de Condición que está en el documento "Apuntes luvia ideas"
-  set peso 0.05 + random-float 0.07
+  set peso random-normal 1.04 0.08
   set pesoInicial peso
 
   ;; Función de frecuencia en documento "Apuntes lluvia idea"
@@ -676,7 +676,7 @@ radioDeteccionConflicto
 radioDeteccionConflicto
 0
 100
-26
+19
 1
 1
 NIL
@@ -691,7 +691,7 @@ probConflicto
 probConflicto
 0
 1
-0.573
+0.552
 0.001
 1
 NIL
