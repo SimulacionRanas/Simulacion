@@ -66,7 +66,7 @@ to go
   ;; revisa si se le debe dar alimento
   ;; 1 tic es 1 hora
   ;; se les aumenta el peso cada 10 horas
-  if ticks mod 10 = 0
+  if ticks mod 10 = 0 and ticks != 0
   [ ask ranas [R-subirPeso] ]
   ask marcas
   [
@@ -159,7 +159,8 @@ to R-comportamientoPrincipal
 end
 
 to R-guardar-posicion
-  file-print (word ticks ";" who ";" pxcor ";"  pycor)
+  let p peso - pesoInicial
+  file-print (word ticks ";" who ";" pxcor ";"  pycor ";" p )
 end
 
 to R-pintar-parcela-actual
@@ -225,7 +226,7 @@ to R-subirPeso ;;Correo del 23 de Julio => Aumen de peso por hora entre 0 y 3.6%
   random-seed new-seed
   let aumentoPeso  pesoInicial * ((Random-float ProbPesoPorHora) / 100)
   set peso peso + (10 * aumentoPeso)
-  print (aumentoPeso * 10)
+  ;; print (aumentoPeso * 10)
 end
 
 to R-moverse
@@ -330,8 +331,8 @@ to R-conflicto
     ifelse probGana <= peso
     [
       ;; Ganó la rana que está ejecutando en el momento, definir consecuencias por ganar
-      print "ganó el agente: "
-      print who
+      ;; print "ganó el agente: "
+      ;; print who
 
       set agentes-conflictos-previos lput [who] of otro-en-conflicto agentes-conflictos-previos
       ;; Se le pide a la rana que perdió que almacene el id de la rana ganadora
@@ -340,13 +341,13 @@ to R-conflicto
         set agentes-conflictos-previos lput [who] of myself agentes-conflictos-previos
         set agentes-amenaza lput [who] of myself agentes-amenaza
         set label (word who " " agentes-amenaza)
-        print agentes-amenaza
+        ;; print agentes-amenaza
       ]
     ]
     [
       ;; Ganó la otra rana, definir consecuencias por perder
-      print "ganó el agente: "
-      print [who] of otro-en-conflicto
+      ;; print "ganó el agente: "
+      ;; print [who] of otro-en-conflicto
 
       set agentes-conflictos-previos lput [who] of otro-en-conflicto agentes-conflictos-previos
       ask otro-en-conflicto
@@ -356,7 +357,7 @@ to R-conflicto
       ;; Se le pide a la rana que perdió que almacene el id de la rana ganadora
       set agentes-amenaza lput [who] of otro-en-conflicto agentes-amenaza
       set label (word who " " agentes-amenaza)
-      print agentes-amenaza
+      ;; print agentes-amenaza
     ]
     ;; TODO: esto hay que reepensarlo luego de que implementemos los "castigos"
     ;; luego de una pelea
@@ -367,7 +368,7 @@ to R-conflicto
     ]
   ]
   [
-    print "Se mantiene el conflicto al menos durante un tic más"
+    ;; print "Se mantiene el conflicto al menos durante un tic más"
   ]
 end
 
@@ -396,14 +397,14 @@ to R-revisar-amenazas
     ;;***************************************************************************************************
     if any? posibles-agentes-conflicto and (random-float 1) < probConflicto
     [
-      print "conflicto iniciado por "
-      print who
+      ;; print "conflicto iniciado por "
+      ;; print who
       set estado-actual conflicto
       set otro-en-conflicto  min-one-of posibles-agentes-conflicto [distance myself]
       ask otro-en-conflicto
       [
-        print "con el agente "
-        print who
+        ;; print "con el agente "
+        ;; print who
         set estado-actual conflicto
         set otro-en-conflicto myself
       ]
@@ -465,11 +466,11 @@ end
 GRAPHICS-WINDOW
 425
 10
-1126
-732
-230
-230
-1.5
+881
+543
+111
+125
+2.0
 1
 14
 1
@@ -479,10 +480,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--230
-230
--230
-230
+-111
+111
+-125
+125
 0
 0
 1
@@ -531,8 +532,8 @@ SLIDER
 cantidad-ranas
 cantidad-ranas
 1
-14
-14
+60
+46
 1
 1
 NIL
@@ -564,7 +565,7 @@ ProbPesoPorHora
 ProbPesoPorHora
 0
 10
-3.5
+3.1
 0.1
 1
 NIL
@@ -609,7 +610,7 @@ CostoMovPorTic
 CostoMovPorTic
 0
 20
-1.5
+1.6
 0.1
 1
 NIL
@@ -639,7 +640,7 @@ tiempo-vida-marca
 tiempo-vida-marca
 0
 100
-50
+20
 1
 1
 NIL
@@ -679,7 +680,7 @@ probConflicto
 probConflicto
 0
 1
-0.552
+0.6
 0.001
 1
 NIL
@@ -735,9 +736,9 @@ Peso promedio de las ranas
 Tics
 Peso Promedio
 0.0
-1000.0
+10.0
 0.0
-35.0
+1.3
 true
 false
 "" ""
@@ -753,15 +754,33 @@ Peso máximo y mínimo de las Ranas
 Tics
 Peso
 0.0
-1000.0
+10.0
 0.0
-35.0
+1.5
 true
 false
 "" ""
 PENS
 "default" 1.0 0 -14070903 true "" "plot max [peso] of ranas"
 "pen-1" 1.0 0 -12087248 true "" "plot min [peso] of ranas"
+
+PLOT
+265
+571
+465
+721
+Desviación Estandar del Peso
+Ticks
+Desviación Estandar
+0.0
+10.0
+0.0
+0.5
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot standard-deviation [peso] of ranas"
 
 @#$#@#$#@
 ## ¿DE QUÉ SE TRATA?
