@@ -159,8 +159,8 @@ to R-comportamientoPrincipal
 end
 
 to R-guardar-posicion
-  let p peso - pesoInicial
-  file-print (word ticks ";" who ";" pxcor ";"  pycor ";" p )
+  let condicion peso - pesoInicial
+  file-print (word ticks ";" who ";" pxcor ";"  pycor ";" condicion )
 end
 
 to R-pintar-parcela-actual
@@ -188,11 +188,7 @@ to R-reevaluar-estado
   ;;Quizás hay que eliminar esta evaluación
   ;;***********************************************************************************
   if estado-actual = conflicto
-  [
-    ;; aca deberia evaluar si ya termino conflicto y si si, determina a cual estado
-    ;; cambiar
-    ;set estado-actual movimiento
-  ]
+  [  ]
   if estado-actual = movimiento
   [
    ifelse peso <= pesoInicial * UmbralDesnutricion
@@ -313,16 +309,14 @@ end
 
 
 to R-conflicto
-  ;;Lo pongo antes de que se decida el resultado del conflicto porque me parece que, en caso de que el conflicto dura más de un tick
-  ;;debería perderse más peso que si sólo dura un tick.
   random-seed new-seed
   let pesoPerdido 2 * CostoMovPorTic + Random-float CostoMovPorTic
   set pesoPerdido peso * (pesoPerdido / 100)
   set peso peso - pesoPerdido
 
     ask otro-en-conflicto [set peso peso - [pesoPerdido] of myself]
-  let probContinue random-float 1
-  ifelse probContinue > probConflictoContinue
+  let probNoContinue random-float 1
+  if probNoContinue > probConflictoContinue
   [
 
     ;;Se define el ganador con una probabilidad basada en el peso de la rana
@@ -331,23 +325,18 @@ to R-conflicto
     ifelse probGana <= peso
     [
       ;; Ganó la rana que está ejecutando en el momento, definir consecuencias por ganar
-      ;; print "ganó el agente: "
-      ;; print who
-
       set agentes-conflictos-previos lput [who] of otro-en-conflicto agentes-conflictos-previos
+
       ;; Se le pide a la rana que perdió que almacene el id de la rana ganadora
       ask otro-en-conflicto
       [
         set agentes-conflictos-previos lput [who] of myself agentes-conflictos-previos
         set agentes-amenaza lput [who] of myself agentes-amenaza
         set label (word who " " agentes-amenaza)
-        ;; print agentes-amenaza
       ]
     ]
     [
       ;; Ganó la otra rana, definir consecuencias por perder
-      ;; print "ganó el agente: "
-      ;; print [who] of otro-en-conflicto
 
       set agentes-conflictos-previos lput [who] of otro-en-conflicto agentes-conflictos-previos
       ask otro-en-conflicto
@@ -357,9 +346,7 @@ to R-conflicto
       ;; Se le pide a la rana que perdió que almacene el id de la rana ganadora
       set agentes-amenaza lput [who] of otro-en-conflicto agentes-amenaza
       set label (word who " " agentes-amenaza)
-      ;; print agentes-amenaza
     ]
-    ;; TODO: esto hay que reepensarlo luego de que implementemos los "castigos"
     ;; luego de una pelea
     set estado-actual movimiento
     ask otro-en-conflicto
@@ -367,44 +354,18 @@ to R-conflicto
       set estado-actual movimiento
     ]
   ]
-  [
-    ;; print "Se mantiene el conflicto al menos durante un tic más"
-  ]
 end
 
 to R-revisar-amenazas
-  ;;******************************************************************************************
-  ;; Muevo esto para otro método para que se ejecute luego de que las ranas se muevan, sino,
-  ;; luego de cada conflicto siguen apareciendo las mismas amenazas
-  ;; ese comportamiento sucede porque no teníamos una lista guardada con los conflictos previos,
-  ;; sea que se ganaron o no, entonces por eso se repetían
-  ;;*******************************************************************************************
-
-
   ;;Lo siguiente revisa que la rana que se mueva, no está en la lista de amenaza de las ranas cercanas.
-    let posibles-agentes-conflicto (other ranas in-radius radioDeteccionConflicto) with [not R-en-lista [agentes-conflictos-previos] of myself who]
-
-    ;;***************************************************************************************************
-    ;; Y si la siguiente comparación la hacemos con un OR, en vez de un AND, para dejar la posibilidad de
-    ;; que yo vuelva a pelear con una rana con la que perdí??
-    ;; Sólo pregunto
-    ;;
-    ;; es una AND porque si lo dejamos en OR y la lista está vacía el programa se cae porque no encuentra
-    ;; el min-one-of posibles-agentes-conflicto [distance myself]
-    ;;
-    ;; TODO: preguntarle a los biologos si luego que la rana pierde conflicto no se puede enfrentar entre
-    ;; ellos de nuevo
-    ;;***************************************************************************************************
+    let posibles-agentes-conflicto (other ranas in-radius radioDeteccionConflicto)
+    with [not R-en-lista [agentes-conflictos-previos] of myself who]
     if any? posibles-agentes-conflicto and (random-float 1) < probConflicto
     [
-      ;; print "conflicto iniciado por "
-      ;; print who
       set estado-actual conflicto
       set otro-en-conflicto  min-one-of posibles-agentes-conflicto [distance myself]
       ask otro-en-conflicto
       [
-        ;; print "con el agente "
-        ;; print who
         set estado-actual conflicto
         set otro-en-conflicto myself
       ]
@@ -565,7 +526,7 @@ ProbPesoPorHora
 ProbPesoPorHora
 0
 10
-3.1
+2.6
 0.1
 1
 NIL
@@ -1172,6 +1133,88 @@ NetLogo 5.3.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="Peso Por hora" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="1000"/>
+    <metric>count turtles</metric>
+    <enumeratedValueSet variable="UmbralDesnutricion">
+      <value value="0.23"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="tiempo-vida-marca">
+      <value value="13"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="UmbralRecuperacion">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="radioDeteccionConflicto">
+      <value value="19"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="cantidad-ranas">
+      <value value="46"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="ProbPesoPorHora" first="1" step="0.1" last="3.6"/>
+    <enumeratedValueSet variable="probConflicto">
+      <value value="0.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ticsMax">
+      <value value="&quot;1000&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="movimiento-por-tic">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prob-exploracion">
+      <value value="0.72"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="CostoMovPorTic">
+      <value value="1.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="probConflictoContinue">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Costo por movimiento" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="1000"/>
+    <metric>count turtles</metric>
+    <enumeratedValueSet variable="UmbralDesnutricion">
+      <value value="0.23"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="tiempo-vida-marca">
+      <value value="13"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="UmbralRecuperacion">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="radioDeteccionConflicto">
+      <value value="19"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="cantidad-ranas">
+      <value value="46"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ProbPesoPorHora">
+      <value value="3.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="probConflicto">
+      <value value="0.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ticsMax">
+      <value value="&quot;1000&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="movimiento-por-tic">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prob-exploracion">
+      <value value="0.72"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="CostoMovPorTic" first="1" step="0.1" last="2"/>
+    <enumeratedValueSet variable="probConflictoContinue">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
