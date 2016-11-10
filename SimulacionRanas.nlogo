@@ -50,12 +50,14 @@ to setup
   [
     P-update
   ]
-  if file-exists? "salida-movimientos.csv"
+  let p  word "salida-movimientos" ProbPesoPorHora
+  set p word p ".csv"
+  if file-exists? (p)
   [
     file-close
-    file-delete "salida-movimientos.csv"
+    file-delete p
   ]
-  file-open "salida-movimientos.csv"
+  file-open p
   reset-ticks
 end
 
@@ -526,8 +528,8 @@ ProbPesoPorHora
 ProbPesoPorHora
 0
 10
-2.6
-0.1
+0
+0.01
 1
 NIL
 HORIZONTAL
@@ -1154,7 +1156,7 @@ NetLogo 5.3.1
     <enumeratedValueSet variable="cantidad-ranas">
       <value value="46"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="ProbPesoPorHora" first="1" step="0.1" last="3.6"/>
+    <steppedValueSet variable="ProbPesoPorHora" first="0.1" step="0.3" last="1.6"/>
     <enumeratedValueSet variable="probConflicto">
       <value value="0.6"/>
     </enumeratedValueSet>
@@ -1174,34 +1176,41 @@ NetLogo 5.3.1
       <value value="0.1"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="Costo por movimiento" repetitions="1" runMetricsEveryStep="true">
+  <experiment name="PesoPorMovimiento" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
-    <timeLimit steps="1000"/>
     <metric>count turtles</metric>
-    <enumeratedValueSet variable="UmbralDesnutricion">
-      <value value="0.23"/>
-    </enumeratedValueSet>
     <enumeratedValueSet variable="tiempo-vida-marca">
       <value value="13"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="UmbralRecuperacion">
-      <value value="0.1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="radioDeteccionConflicto">
       <value value="19"/>
     </enumeratedValueSet>
+    <enumeratedValueSet variable="ticsMax">
+      <value value="&quot;1000&quot;"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="cantidad-ranas">
       <value value="46"/>
     </enumeratedValueSet>
+    <enumeratedValueSet variable="CostoMovPorTic">
+      <value value="1"/>
+      <value value="0.02"/>
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="UmbralRecuperacion">
+      <value value="0.1"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="ProbPesoPorHora">
-      <value value="3.1"/>
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="probConflictoContinue">
+      <value value="0.1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="probConflicto">
       <value value="0.6"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="ticsMax">
-      <value value="&quot;1000&quot;"/>
+    <enumeratedValueSet variable="UmbralDesnutricion">
+      <value value="0.23"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="movimiento-por-tic">
       <value value="10"/>
@@ -1209,9 +1218,132 @@ NetLogo 5.3.1
     <enumeratedValueSet variable="prob-exploracion">
       <value value="0.72"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="CostoMovPorTic" first="1" step="0.1" last="2"/>
+  </experiment>
+  <experiment name="Conflicto" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>1,5 - 3,5 [0,4]</metric>
+    <enumeratedValueSet variable="tiempo-vida-marca">
+      <value value="13"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="radioDeteccionConflicto">
+      <value value="19"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ticsMax">
+      <value value="&quot;1000&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="cantidad-ranas">
+      <value value="46"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="CostoMovPorTic">
+      <value value="1.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="UmbralRecuperacion">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ProbPesoPorHora">
+      <value value="0"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="probConflictoContinue">
       <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="probConflicto">
+      <value value="0.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="UmbralDesnutricion">
+      <value value="0.23"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="movimiento-por-tic">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prob-exploracion">
+      <value value="0.72"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Densidad" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>count turtles</metric>
+    <enumeratedValueSet variable="tiempo-vida-marca">
+      <value value="13"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="radioDeteccionConflicto">
+      <value value="19"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ticsMax">
+      <value value="&quot;1000&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="cantidad-ranas">
+      <value value="23"/>
+      <value value="14"/>
+      <value value="92"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="CostoMovPorTic">
+      <value value="1.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="UmbralRecuperacion">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ProbPesoPorHora">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="probConflictoContinue">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="probConflicto">
+      <value value="0.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="UmbralDesnutricion">
+      <value value="0.23"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="movimiento-por-tic">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prob-exploracion">
+      <value value="0.72"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="conflicto" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>count turtles</metric>
+    <enumeratedValueSet variable="tiempo-vida-marca">
+      <value value="13"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="radioDeteccionConflicto">
+      <value value="19"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ticsMax">
+      <value value="&quot;1000&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="cantidad-ranas">
+      <value value="46"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="CostoMovPorTic">
+      <value value="1.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="UmbralRecuperacion">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ProbPesoPorHora">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="probConflictoContinue">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="probConflicto">
+      <value value="0.6"/>
+      <value value="0.1"/>
+      <value value="0.8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="UmbralDesnutricion">
+      <value value="0.23"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="movimiento-por-tic">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prob-exploracion">
+      <value value="0.72"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
