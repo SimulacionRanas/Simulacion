@@ -50,7 +50,7 @@ to setup
   [
     P-update
   ]
-  let p  word "peso-salida-movimientos" ProbPesoPorHora
+  let p  word "peso-salida-movimientos" CostoMovPorTic
   set p word p ".csv"
   if file-exists? (p)
   [
@@ -93,7 +93,7 @@ to go
 
   if ticks >= read-from-string ticsMax
     [
-      let v word "peso" ProbPesoPorHora
+      let v word "peso" CostoMovPorTic
       set v word v ".png"
       export-view word "vistaFinal-" v
       export-all-plots word v ".csv"
