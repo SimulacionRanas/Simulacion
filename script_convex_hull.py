@@ -21,7 +21,7 @@ class interval:
 
 def get_intervals(inter):
     # extraigo del csv las marcas
-    m = np.loadtxt(open("salida-movimientos.csv","rb"),delimiter=";",skiprows=0)
+    m = np.loadtxt(open(sys.argv[2],"rb"),delimiter=";",skiprows=0)
 
     # busco la cantidad de ranas y el ultimo tic
     # sumo 1 por el index empieza en 0

@@ -50,7 +50,7 @@ to setup
   [
     P-update
   ]
-  let p  word "salida-movimientos" ProbPesoPorHora
+  let p  word "peso-salida-movimientos" ProbPesoPorHora
   set p word p ".csv"
   if file-exists? (p)
   [
@@ -93,7 +93,10 @@ to go
 
   if ticks >= read-from-string ticsMax
     [
-      export-view "vista-final.png"
+      let v word "peso" ProbPesoPorHora
+      set v word v ".png"
+      export-view word "vistaFinal-" v
+      export-all-plots word v ".csv"
       file-close
       stop
     ]
@@ -528,7 +531,7 @@ ProbPesoPorHora
 ProbPesoPorHora
 0
 10
-0
+1.91
 0.01
 1
 NIL
@@ -1136,7 +1139,7 @@ NetLogo 5.3.1
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="Peso Por hora" repetitions="1" runMetricsEveryStep="true">
+  <experiment name="Peso Por hora" repetitions="1" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="1000"/>
