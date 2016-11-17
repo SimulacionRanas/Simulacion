@@ -50,7 +50,7 @@ to setup
   [
     P-update
   ]
-  let p  word "peso-salida-movimientos" CostoMovPorTic
+  let p  word "peso-salida-movimientos" probConflicto
   set p word p ".csv"
   if file-exists? (p)
   [
@@ -93,7 +93,7 @@ to go
 
   if ticks >= read-from-string ticsMax
     [
-      let v word "peso" CostoMovPorTic
+      let v word "peso" probConflicto
       set v word v ".png"
       export-view word "vistaFinal-" v
       export-all-plots word v ".csv"
@@ -315,7 +315,7 @@ end
 
 to R-conflicto
   random-seed new-seed
-  let pesoPerdido 2 * CostoMovPorTic + Random-float CostoMovPorTic
+  let pesoPerdido Perdida-por-conflicto * CostoMovPorTic + Random-float CostoMovPorTic
   set pesoPerdido peso * (pesoPerdido / 100)
   set peso peso - pesoPerdido
 
@@ -531,7 +531,7 @@ ProbPesoPorHora
 ProbPesoPorHora
 0
 10
-1.91
+2.5
 0.01
 1
 NIL
@@ -747,6 +747,21 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot standard-deviation [peso] of ranas"
+
+SLIDER
+227
+285
+399
+318
+Perdida-por-conflicto
+Perdida-por-conflicto
+0
+10
+2
+0.1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## ¿DE QUÉ SE TRATA?
@@ -1195,57 +1210,12 @@ NetLogo 5.3.1
     <enumeratedValueSet variable="cantidad-ranas">
       <value value="46"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="CostoMovPorTic">
-      <value value="1"/>
-      <value value="0.02"/>
-      <value value="2"/>
-    </enumeratedValueSet>
+    <steppedValueSet variable="CostoMovPorTic" first="1" step="0.2" last="2"/>
     <enumeratedValueSet variable="UmbralRecuperacion">
       <value value="0.1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="ProbPesoPorHora">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="probConflictoContinue">
-      <value value="0.1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="probConflicto">
-      <value value="0.6"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="UmbralDesnutricion">
-      <value value="0.23"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="movimiento-por-tic">
-      <value value="10"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="prob-exploracion">
-      <value value="0.72"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="Conflicto" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <metric>1,5 - 3,5 [0,4]</metric>
-    <enumeratedValueSet variable="tiempo-vida-marca">
-      <value value="13"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="radioDeteccionConflicto">
-      <value value="19"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="ticsMax">
-      <value value="&quot;1000&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="cantidad-ranas">
-      <value value="46"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="CostoMovPorTic">
-      <value value="1.6"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="UmbralRecuperacion">
-      <value value="0.1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="ProbPesoPorHora">
-      <value value="0"/>
+      <value value="2.5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="probConflictoContinue">
       <value value="0.1"/>
@@ -1266,7 +1236,7 @@ NetLogo 5.3.1
   <experiment name="Densidad" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
-    <metric>count turtles</metric>
+    <metric>count ranas</metric>
     <enumeratedValueSet variable="tiempo-vida-marca">
       <value value="13"/>
     </enumeratedValueSet>
@@ -1276,11 +1246,7 @@ NetLogo 5.3.1
     <enumeratedValueSet variable="ticsMax">
       <value value="&quot;1000&quot;"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="cantidad-ranas">
-      <value value="23"/>
-      <value value="14"/>
-      <value value="92"/>
-    </enumeratedValueSet>
+    <steppedValueSet variable="cantidad-ranas" first="23" step="14" last="92"/>
     <enumeratedValueSet variable="CostoMovPorTic">
       <value value="1.6"/>
     </enumeratedValueSet>
@@ -1288,7 +1254,7 @@ NetLogo 5.3.1
       <value value="0.1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="ProbPesoPorHora">
-      <value value="0"/>
+      <value value="2.5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="probConflictoContinue">
       <value value="0.1"/>
@@ -1304,6 +1270,9 @@ NetLogo 5.3.1
     </enumeratedValueSet>
     <enumeratedValueSet variable="prob-exploracion">
       <value value="0.72"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Perdida-por-conflicto">
+      <value value="2"/>
     </enumeratedValueSet>
   </experiment>
   <experiment name="conflicto" repetitions="1" runMetricsEveryStep="true">
@@ -1329,15 +1298,55 @@ NetLogo 5.3.1
       <value value="0.1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="ProbPesoPorHora">
-      <value value="0"/>
+      <value value="2.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="probConflictoContinue">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="probConflicto" first="0.6" step="0.1" last="0.8"/>
+    <enumeratedValueSet variable="UmbralDesnutricion">
+      <value value="0.23"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="movimiento-por-tic">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prob-exploracion">
+      <value value="0.72"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Perdida-por-conflicto">
+      <value value="2"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Perdida por conflicto" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>count turtles</metric>
+    <enumeratedValueSet variable="tiempo-vida-marca">
+      <value value="13"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="radioDeteccionConflicto">
+      <value value="19"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ticsMax">
+      <value value="&quot;1000&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="cantidad-ranas">
+      <value value="46"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="CostoMovPorTic">
+      <value value="1.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="UmbralRecuperacion">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ProbPesoPorHora">
+      <value value="2.5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="probConflictoContinue">
       <value value="0.1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="probConflicto">
       <value value="0.6"/>
-      <value value="0.1"/>
-      <value value="0.8"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="UmbralDesnutricion">
       <value value="0.23"/>
@@ -1348,6 +1357,7 @@ NetLogo 5.3.1
     <enumeratedValueSet variable="prob-exploracion">
       <value value="0.72"/>
     </enumeratedValueSet>
+    <steppedValueSet variable="Perdida-por-conflicto" first="0.5" step="0.5" last="3.5"/>
   </experiment>
 </experiments>
 @#$#@#$#@
