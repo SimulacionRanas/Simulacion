@@ -646,7 +646,7 @@ probConflicto
 probConflicto
 0
 1
-0.6
+0.5
 0.001
 1
 NIL
@@ -1303,7 +1303,7 @@ NetLogo 5.3.1
     <enumeratedValueSet variable="probConflictoContinue">
       <value value="0.1"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="probConflicto" first="0.6" step="0.1" last="0.8"/>
+    <steppedValueSet variable="probConflicto" first="0.5" step="0.1" last="0.7"/>
     <enumeratedValueSet variable="UmbralDesnutricion">
       <value value="0.23"/>
     </enumeratedValueSet>
@@ -1358,6 +1358,51 @@ NetLogo 5.3.1
       <value value="0.72"/>
     </enumeratedValueSet>
     <steppedValueSet variable="Perdida-por-conflicto" first="0.5" step="0.5" last="3.5"/>
+  </experiment>
+  <experiment name="Densidad 2" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>count turtles</metric>
+    <enumeratedValueSet variable="radioDeteccionConflicto">
+      <value value="19"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="cantidad-ranas">
+      <value value="46"/>
+      <value value="92"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="UmbralDesnutricion">
+      <value value="0.23"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prob-exploracion">
+      <value value="0.72"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="UmbralRecuperacion">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="CostoMovPorTic">
+      <value value="1.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Perdida-por-conflicto">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ProbPesoPorHora">
+      <value value="2.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="probConflicto">
+      <value value="0.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="probConflictoContinue">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="movimiento-por-tic">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="tiempo-vida-marca">
+      <value value="13"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ticsMax">
+      <value value="&quot;1000&quot;"/>
+    </enumeratedValueSet>
   </experiment>
 </experiments>
 @#$#@#$#@
